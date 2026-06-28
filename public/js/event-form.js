@@ -211,18 +211,16 @@
 
         uploadStatus.textContent = t('picker.uploadSuccess', 'Image uploaded.');
 
+        const uploaded = data.items?.[0];
         if (data.aspectWarnings?.length && window.renderAspectWarnings) {
-          window.renderAspectWarnings(pickerAspectWarnings, data.aspectWarnings);
-        }
-
-        if (data.items?.length) {
-
-          selectImage(data.items[0]);
-
+          window.renderAspectWarnings(pickerAspectWarnings, data.aspectWarnings, {
+            onFixed: (item) => selectImage(item),
+            onDismiss: () => { if (uploaded) selectImage(uploaded); },
+          });
+        } else if (uploaded) {
+          selectImage(uploaded);
         } else {
-
           await loadPicker();
-
         }
 
       } catch (err) {

@@ -52,7 +52,9 @@
 
   data-upload-url="<%= b %>/media/upload"
 
-  data-picker-url="<%= b %>/media/picker">
+  data-picker-url="<%= b %>/media/picker"
+
+  data-media-base="<%= b %>/media">
 
   <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
@@ -356,7 +358,7 @@
 
         <span class="muted sm" id="pickerUploadStatus"></span>
 
-        <div id="pickerAspectWarnings" class="aspect-warnings" hidden></div>
+        <div id="pickerAspectWarnings" class="aspect-warnings" data-fix-base="<%= b %>/media" data-csrf="<%= csrfToken %>" hidden></div>
 
       </div>
 

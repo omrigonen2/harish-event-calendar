@@ -70,7 +70,9 @@ document.addEventListener('click', (e) => {
         status.textContent = t('flash.mediaUploaded', { count: data.uploaded || 0, duplicates: dup }, `${data.uploaded || 0} uploaded.`);
       }
       if (data.aspectWarnings?.length && window.renderAspectWarnings) {
-        window.renderAspectWarnings(warningsEl, data.aspectWarnings);
+        window.renderAspectWarnings(warningsEl, data.aspectWarnings, {
+          onFixed: () => window.location.reload(),
+        });
       }
       fileInput.value = '';
       if (data.uploaded && !data.aspectWarnings?.length) window.location.reload();

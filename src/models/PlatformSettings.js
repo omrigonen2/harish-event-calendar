@@ -4,6 +4,7 @@ import {
   EVENT_COVER_ASPECT_TOLERANCE,
   EVENT_COVER_TARGET_HEIGHT,
   EVENT_COVER_TARGET_WIDTH,
+  DEFAULT_EVENT_COVER_IMAGE_MODEL,
 } from '../config/eventCover.js';
 
 const { Schema } = mongoose;
@@ -34,6 +35,7 @@ const platformSettingsSchema = new Schema(
       eventCoverTargetWidth: { type: Number, default: EVENT_COVER_TARGET_WIDTH },
       eventCoverTargetHeight: { type: Number, default: EVENT_COVER_TARGET_HEIGHT },
       eventCoverAspectTolerance: { type: Number, default: EVENT_COVER_ASPECT_TOLERANCE },
+      eventCoverImageModel: { type: String, default: DEFAULT_EVENT_COVER_IMAGE_MODEL },
     },
   },
   { timestamps: true },

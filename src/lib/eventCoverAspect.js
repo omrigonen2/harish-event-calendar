@@ -4,6 +4,7 @@ import {
   EVENT_COVER_TARGET_RATIO,
   EVENT_COVER_ASPECT_TOLERANCE,
   DEFAULT_EVENT_COVER_ASPECT_PROMPT,
+  DEFAULT_EVENT_COVER_IMAGE_MODEL,
 } from '../config/eventCover.js';
 
 function roundRatio(n) {
@@ -16,7 +17,17 @@ export function resolveEventCoverSettings(platformMedia = {}) {
     targetHeight: platformMedia.eventCoverTargetHeight || EVENT_COVER_TARGET_HEIGHT,
     aspectTolerance: platformMedia.eventCoverAspectTolerance ?? EVENT_COVER_ASPECT_TOLERANCE,
     aspectPrompt: platformMedia.eventCoverAspectPrompt?.trim() || DEFAULT_EVENT_COVER_ASPECT_PROMPT,
+    imageModel: platformMedia.eventCoverImageModel?.trim() || DEFAULT_EVENT_COVER_IMAGE_MODEL,
   };
+}
+
+/** OpenAI requires width and height divisible by 16. */
+export function toOpenAiImageSize(width, height) {
+  const ratio = width / height;
+  let w = Math.max(16, Math.round(width / 16) * 16);
+  let h = Math.max(16, Math.round(w / ratio / 16) * 16);
+  if (h < 16) h = 16;
+  return `${w}x${h}`;
 }
 
 export function targetRatio(settings) {
@@ -78,6 +89,9 @@ export function buildAspectSuggestion(aspect, settings) {
     targetHeight: settings.targetHeight,
     targetRatio: aspect.targetRatio,
     orientation: aspect.orientation,
-    aiPrompt: fillEventCoverPrompt(settings.aspectPrompt, aspect, settings),
   };
+}
+
+export function buildAspectEditPrompt(aspect, settings) {
+  return fillEventCoverPrompt(settings.aspectPrompt, aspect, settings);
 }

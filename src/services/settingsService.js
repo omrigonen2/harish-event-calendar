@@ -122,6 +122,7 @@ export async function getMaskedSettings() {
       eventCoverTargetWidth: media.targetWidth,
       eventCoverTargetHeight: media.targetHeight,
       eventCoverAspectTolerance: media.aspectTolerance,
+      eventCoverImageModel: media.imageModel,
     },
   };
 }
@@ -189,6 +190,9 @@ export async function updateSettings(section, values) {
       if (!Number.isNaN(tol) && tol > 0 && tol < 1) {
         doc.media.eventCoverAspectTolerance = tol;
       }
+    }
+    if (values.eventCoverImageModel !== undefined) {
+      doc.media.eventCoverImageModel = values.eventCoverImageModel.trim() || doc.media.eventCoverImageModel;
     }
   }
   await doc.save();

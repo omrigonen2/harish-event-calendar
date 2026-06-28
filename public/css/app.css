@@ -190,7 +190,15 @@ textarea { resize: vertical; }
 .aspect-warning { border: 1px solid #f0c674; background: #fffbeb; border-radius: var(--radius); padding: 14px 16px; }
 .aspect-warning__title { font-weight: 600; margin: 0 0 6px; }
 .aspect-warning__hint { margin: 0 0 10px; }
-.aspect-warning__prompt { width: 100%; font-family: inherit; font-size: 0.85rem; line-height: 1.45; margin-bottom: 10px; resize: vertical; }
+.aspect-warning__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.aspect-warning__done { margin: 0; color: var(--success, #15803d); font-weight: 600; }
+.aspect-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+@media (max-width: 640px) { .aspect-compare { grid-template-columns: 1fr; } }
+.aspect-compare__card { border: 1px solid var(--border); border-radius: var(--radius); padding: 8px; background: #fff; }
+.aspect-compare__label { font-weight: 600; margin: 0 0 8px; font-size: .9rem; }
+.aspect-compare__img { width: 100%; height: auto; display: block; border-radius: calc(var(--radius) - 2px); object-fit: contain; max-height: 220px; background: #f4f4f5; }
+.aspect-remake { border-top: 1px solid #f0dca0; padding-top: 12px; }
+.aspect-remake__comment { width: 100%; margin-top: 6px; margin-bottom: 8px; font-family: inherit; resize: vertical; }
 .card--wide { grid-column: 1 / -1; }
 .upload-status { margin-top: 8px; font-size: .85rem; }
 

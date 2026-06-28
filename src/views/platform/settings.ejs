@@ -97,6 +97,9 @@
           <input type="number" name="eventCoverTargetHeight" min="225" max="4000" value="<%= platformSettings.media.eventCoverTargetHeight %>"></label>
         <label class="field"><span><%= t('platform.eventCoverAspectTolerance') %></span>
           <input type="number" name="eventCoverAspectTolerance" min="0.01" max="0.5" step="0.01" value="<%= platformSettings.media.eventCoverAspectTolerance %>"></label>
+        <label class="field"><span><%= t('platform.eventCoverImageModel') %></span>
+          <input type="text" name="eventCoverImageModel" value="<%= platformSettings.media.eventCoverImageModel %>" placeholder="gpt-image-1.5">
+          <small class="muted"><%= t('platform.eventCoverImageModelHelp') %></small></label>
       </div>
       <label class="field"><span><%= t('platform.eventCoverAspectPrompt') %></span>
         <textarea name="eventCoverAspectPrompt" rows="12"><%= platformSettings.media.eventCoverAspectPrompt %></textarea>

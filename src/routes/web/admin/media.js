@@ -28,6 +28,38 @@ function base(req) {
   return `/admin/${req.tenant.slug}`;
 }
 
+function mediaItem(req, asset, { previewId = null, width = null, height = null } = {}) {
+  const b = base(req);
+  const ts = Date.now();
+  const url = previewId
+    ? `${b}/media/${asset._id}/aspect-preview/${previewId}/raw?t=${ts}`
+    : `${b}/media/${asset._id}/raw?t=${ts}`;
+  return {
+    id: asset._id,
+    filename: asset.filename,
+    url,
+    width: width ?? asset.width,
+    height: height ?? asset.height,
+    previewId,
+  };
+}
+
+async function aspectPreviewResponse(req, res, result) {
+  if (!result) {
+    return res.status(404).json({ error: translate('flash.permissionDenied', lang(req)) });
+  }
+  const { asset, previewId, previewWidth, previewHeight } = result;
+  return res.json({
+    previewId,
+    original: mediaItem(req, asset),
+    preview: mediaItem(req, asset, {
+      previewId,
+      width: previewWidth,
+      height: previewHeight,
+    }),
+  });
+}
+
 router.get(
   '/',
   asyncHandler(async (req, res) => {
@@ -71,7 +103,7 @@ router.post(
         folder: req.body.folder || '',
         tags,
       });
-      if (aspectWarning) aspectWarnings.push({ filename: file.originalname, ...aspectWarning });
+      if (aspectWarning) aspectWarnings.push(aspectWarning);
       if (duplicate) duplicates += 1;
       else {
         uploaded += 1;
@@ -115,6 +147,84 @@ router.get(
       url: `${b}/media/${a._id}/raw`,
     }));
     res.json({ items });
+  }),
+);
+
+router.post(
+  '/:id/fix-aspect/preview',
+  asyncHandler(async (req, res) => {
+    const scope = editorScope(req);
+    try {
+      const oldPreviewId = req.body?.previewId;
+      if (oldPreviewId) {
+        await mediaService.discardAspectPreview(req.tenant, req.params.id, oldPreviewId, scope);
+      }
+      const result = await mediaService.generateAspectPreview(
+        req.tenant,
+        req.params.id,
+        scope,
+        { comment: req.body?.comment || '' },
+      );
+      return aspectPreviewResponse(req, res, result);
+    } catch (err) {
+      return res.status(502).json({ error: err.message });
+    }
+  }),
+);
+
+router.post(
+  '/:id/fix-aspect/apply',
+  asyncHandler(async (req, res) => {
+    const scope = editorScope(req);
+    const previewId = req.body?.previewId;
+    if (!previewId) return res.status(400).json({ error: 'previewId is required' });
+    try {
+      const result = await mediaService.applyAspectPreview(req.tenant, req.params.id, previewId, scope);
+      if (!result) {
+        return res.status(404).json({ error: translate('flash.permissionDenied', lang(req)) });
+      }
+      await audit({
+        tenantId: req.tenant._id,
+        actor: req.user,
+        action: AUDIT_ACTIONS.MEDIA_ASPECT_FIXED,
+        entityType: 'media',
+        entityId: result.asset._id,
+      });
+      return res.json({ item: mediaItem(req, result.asset) });
+    } catch (err) {
+      return res.status(502).json({ error: err.message });
+    }
+  }),
+);
+
+router.post(
+  '/:id/fix-aspect/discard',
+  asyncHandler(async (req, res) => {
+    const scope = editorScope(req);
+    const previewId = req.body?.previewId;
+    if (!previewId) return res.status(400).json({ error: 'previewId is required' });
+    const result = await mediaService.discardAspectPreview(req.tenant, req.params.id, previewId, scope);
+    if (!result) {
+      return res.status(404).json({ error: translate('flash.permissionDenied', lang(req)) });
+    }
+    return res.json({ ok: true, item: mediaItem(req, result.asset) });
+  }),
+);
+
+router.get(
+  '/:id/aspect-preview/:previewId/raw',
+  asyncHandler(async (req, res) => {
+    const scope = editorScope(req);
+    const buffer = await mediaService.getAspectPreviewBuffer(
+      req.tenant,
+      req.params.id,
+      req.params.previewId,
+      scope,
+    );
+    if (!buffer) return res.status(404).end();
+    res.set('Cache-Control', 'no-store');
+    res.type('image/webp');
+    res.send(buffer);
   }),
 );
 

@@ -89,6 +89,7 @@ export const AUDIT_ACTIONS = {
   TENANT_CREATED: 'tenant.created',
   TENANT_SUSPENDED: 'tenant.suspended',
   MEDIA_UPLOADED: 'media.uploaded',
+  MEDIA_ASPECT_FIXED: 'media.aspect_fixed',
   MEDIA_DELETED: 'media.deleted',
   TOKEN_CREATED: 'token.created',
   TOKEN_REVOKED: 'token.revoked',

@@ -48,3 +48,11 @@ export async function getPresignedUrl(config, key, expiresIn = 3600) {
   const command = new GetObjectCommand({ Bucket: config.bucket, Key: key });
   return getSignedUrl(client, command, { expiresIn });
 }
+
+export async function getObjectBuffer(config, key) {
+  const client = buildS3Client(config);
+  const res = await client.send(new GetObjectCommand({ Bucket: config.bucket, Key: key }));
+  const chunks = [];
+  for await (const chunk of res.Body) chunks.push(chunk);
+  return Buffer.concat(chunks);
+}

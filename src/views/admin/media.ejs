@@ -19,7 +19,7 @@
       <button class="btn btn--primary" type="submit"><%= t('media.upload') %></button>
     </div>
     <div class="upload-status" id="uploadStatus"></div>
-    <div id="aspectWarnings" class="aspect-warnings" <%= aspectWarnings.length ? '' : 'hidden' %>></div>
+    <div id="aspectWarnings" class="aspect-warnings" data-fix-base="<%= b %>/media" data-csrf="<%= csrfToken %>" <%= aspectWarnings.length ? '' : 'hidden' %>></div>
   </form>
 </div>
 
@@ -29,7 +29,8 @@
     if (window.renderAspectWarnings) {
       window.renderAspectWarnings(
         document.getElementById('aspectWarnings'),
-        <%- JSON.stringify(aspectWarnings) %>
+        <%- JSON.stringify(aspectWarnings) %>,
+        { onFixed: function () { window.location.reload(); } }
       );
     }
   });
