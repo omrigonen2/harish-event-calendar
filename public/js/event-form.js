@@ -98,6 +98,8 @@
 
   const uploadStatus = document.getElementById('pickerUploadStatus');
 
+  const pickerAspectWarnings = document.getElementById('pickerAspectWarnings');
+
   const pickerUrl = form.dataset.pickerUrl;
 
   const uploadUrl = form.dataset.uploadUrl;
@@ -183,6 +185,7 @@
       if (!file) return;
 
       uploadStatus.textContent = t('common.loading', 'Loading...');
+      if (window.renderAspectWarnings) window.renderAspectWarnings(pickerAspectWarnings, []);
 
       const fd = new FormData();
 
@@ -207,6 +210,10 @@
         if (!res.ok) throw new Error(data.error || t('picker.uploadError', 'Upload failed.'));
 
         uploadStatus.textContent = t('picker.uploadSuccess', 'Image uploaded.');
+
+        if (data.aspectWarnings?.length && window.renderAspectWarnings) {
+          window.renderAspectWarnings(pickerAspectWarnings, data.aspectWarnings);
+        }
 
         if (data.items?.length) {
 
@@ -247,6 +254,7 @@
     modal.hidden = true;
 
     if (uploadStatus) uploadStatus.textContent = '';
+    if (window.renderAspectWarnings) window.renderAspectWarnings(pickerAspectWarnings, []);
 
   }
 

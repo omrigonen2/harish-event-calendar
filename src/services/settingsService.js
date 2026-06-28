@@ -1,6 +1,7 @@
 import PlatformSettings from '../models/PlatformSettings.js';
 import TenantSettings from '../models/TenantSettings.js';
 import { encrypt, decrypt } from '../lib/crypto.js';
+import { resolveEventCoverSettings } from '../lib/eventCoverAspect.js';
 
 export async function getRawSettings() {
   let doc = await PlatformSettings.findOne({ singleton: 'platform' });
@@ -90,9 +91,15 @@ export async function getResendConfig(tenantId = null) {
   };
 }
 
+export async function getPlatformMediaSettings() {
+  const doc = await getRawSettings();
+  return resolveEventCoverSettings(doc.media || {});
+}
+
 export async function getMaskedSettings() {
   const doc = await getRawSettings();
   const has = (v) => Boolean(v);
+  const media = resolveEventCoverSettings(doc.media || {});
   return {
     s3: {
       endpoint: doc.s3.endpoint,
@@ -109,6 +116,12 @@ export async function getMaskedSettings() {
       hasApiKey: has(doc.resend.apiKey),
       fromEmail: doc.resend.fromEmail,
       fromName: doc.resend.fromName,
+    },
+    media: {
+      eventCoverAspectPrompt: media.aspectPrompt,
+      eventCoverTargetWidth: media.targetWidth,
+      eventCoverTargetHeight: media.targetHeight,
+      eventCoverAspectTolerance: media.aspectTolerance,
     },
   };
 }
@@ -161,6 +174,22 @@ export async function updateSettings(section, values) {
     doc.resend.fromEmail = values.fromEmail ?? doc.resend.fromEmail;
     doc.resend.fromName = values.fromName ?? doc.resend.fromName;
     if (values.apiKey) doc.resend.apiKey = encrypt(values.apiKey);
+  } else if (section === 'media') {
+    if (values.eventCoverAspectPrompt !== undefined) {
+      doc.media.eventCoverAspectPrompt = values.eventCoverAspectPrompt;
+    }
+    if (values.eventCoverTargetWidth !== undefined) {
+      doc.media.eventCoverTargetWidth = Number(values.eventCoverTargetWidth) || doc.media.eventCoverTargetWidth;
+    }
+    if (values.eventCoverTargetHeight !== undefined) {
+      doc.media.eventCoverTargetHeight = Number(values.eventCoverTargetHeight) || doc.media.eventCoverTargetHeight;
+    }
+    if (values.eventCoverAspectTolerance !== undefined) {
+      const tol = Number(values.eventCoverAspectTolerance);
+      if (!Number.isNaN(tol) && tol > 0 && tol < 1) {
+        doc.media.eventCoverAspectTolerance = tol;
+      }
+    }
   }
   await doc.save();
   return doc;

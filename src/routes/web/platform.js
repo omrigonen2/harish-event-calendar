@@ -262,7 +262,7 @@ router.post(
   '/settings/:section',
   asyncHandler(async (req, res) => {
     const section = req.params.section;
-    if (!['s3', 'openai', 'resend'].includes(section)) {
+    if (!['s3', 'openai', 'resend', 'media'].includes(section)) {
       return res.status(400).render('errors/404', { title: 'Not found' });
     }
     await updateSettings(section, req.body);

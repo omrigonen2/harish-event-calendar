@@ -2,8 +2,13 @@ import sharp from 'sharp';
 import { nanoid } from 'nanoid';
 import MediaAsset from '../models/MediaAsset.js';
 import { putObject, deleteObject, getPresignedUrl } from '../lib/s3.js';
-import { getS3Config } from './settingsService.js';
+import { getS3Config, getPlatformMediaSettings } from './settingsService.js';
 import { sha256Hex } from '../lib/crypto.js';
+import {
+  buildAspectSuggestion,
+  checkEventCoverAspect,
+  resolveEventCoverSettings,
+} from '../lib/eventCoverAspect.js';
 
 const MAX_DIMENSION = 2000;
 
@@ -22,18 +27,32 @@ async function optimize(buffer) {
   return { output, width: outMeta.width, height: outMeta.height };
 }
 
-export async function uploadImage(tenant, userId, file, { folder = '', tags = [] } = {}) {
-  const config = await getS3Config(tenant._id);
+async function readImageDimensions(buffer) {
+  const meta = await sharp(buffer).rotate().metadata();
+  return { width: meta.width || 0, height: meta.height || 0 };
+}
+
+export async function analyzeUploadAspect(buffer, coverSettings = null) {
+  const settings = coverSettings || resolveEventCoverSettings({});
+  const { width, height } = await readImageDimensions(buffer);
+  const aspect = checkEventCoverAspect(width, height, settings);
+  return buildAspectSuggestion(aspect, settings);
+}
+
+export async function uploadImage(tenant, userId, file, { folder = '', tags = [], coverSettings = null } = {}) {
+  const settings = coverSettings || (await getPlatformMediaSettings());
+  const aspectWarning = await analyzeUploadAspect(file.buffer, settings);
   const { output, width, height } = await optimize(file.buffer);
   const hash = sha256Hex(output);
 
   // Duplicate detection within the tenant.
   const existing = await MediaAsset.findOne({ tenantId: tenant._id, hash });
   if (existing) {
-    return { asset: existing, duplicate: true };
+    return { asset: existing, duplicate: true, aspectWarning };
   }
 
   const key = `${tenant.slug}/media/${nanoid()}.webp`;
+  const config = await getS3Config(tenant._id);
   await putObject(config, { key, body: output, contentType: 'image/webp' });
 
   const asset = await MediaAsset.create({
@@ -49,7 +68,7 @@ export async function uploadImage(tenant, userId, file, { folder = '', tags = []
     hash,
     uploadedBy: userId,
   });
-  return { asset, duplicate: false };
+  return { asset, duplicate: false, aspectWarning };
 }
 
 export async function listMedia(tenantId, { folder, q, userId } = {}) {

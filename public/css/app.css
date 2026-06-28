@@ -186,6 +186,12 @@ textarea { resize: vertical; }
 .media-card input { margin-bottom: 4px; }
 .dropzone { border: 2px dashed var(--border); border-radius: var(--radius); padding: 30px; text-align: center; cursor: pointer; color: var(--muted); margin-bottom: 12px; }
 .dropzone.is-drag { border-color: var(--brand-primary); background: #f0f6ff; }
+.aspect-warnings { margin-top: 12px; display: flex; flex-direction: column; gap: 12px; }
+.aspect-warning { border: 1px solid #f0c674; background: #fffbeb; border-radius: var(--radius); padding: 14px 16px; }
+.aspect-warning__title { font-weight: 600; margin: 0 0 6px; }
+.aspect-warning__hint { margin: 0 0 10px; }
+.aspect-warning__prompt { width: 100%; font-family: inherit; font-size: 0.85rem; line-height: 1.45; margin-bottom: 10px; resize: vertical; }
+.card--wide { grid-column: 1 / -1; }
 .upload-status { margin-top: 8px; font-size: .85rem; }
 
 /* Modal */

@@ -16,11 +16,16 @@ document.addEventListener('click', (e) => {
   const fileInput = document.getElementById('fileInput');
   const form = document.getElementById('uploader');
   const status = document.getElementById('uploadStatus');
+  const warningsEl = document.getElementById('aspectWarnings');
   const UI = window.__UI || {};
   const t = (key, vars, fallback) => {
     let text = UI[key] || fallback || key;
     if (vars) Object.entries(vars).forEach(([k, v]) => { text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v)); });
     return text;
+  };
+  const getCsrf = () => {
+    const el = form?.querySelector('input[name="_csrf"]');
+    return el ? el.value : '';
   };
   if (!dropzone || !fileInput || !form) return;
 
@@ -43,6 +48,35 @@ document.addEventListener('click', (e) => {
   });
   fileInput.addEventListener('change', () => {
     if (status) status.textContent = t('media.filesReady', { count: fileInput.files.length }, `${fileInput.files.length} file(s) ready to upload.`);
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!fileInput.files?.length) return;
+    if (status) status.textContent = t('common.loading', {}, 'Loading...');
+    if (window.renderAspectWarnings) window.renderAspectWarnings(warningsEl, []);
+    const fd = new FormData(form);
+    try {
+      const res = await fetch(form.dataset.url || form.action, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json', 'X-CSRF-Token': getCsrf() },
+        body: fd,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+      const dup = data.duplicates ? t('flash.mediaDuplicates', { count: data.duplicates }, '') : '';
+      if (status) {
+        status.textContent = t('flash.mediaUploaded', { count: data.uploaded || 0, duplicates: dup }, `${data.uploaded || 0} uploaded.`);
+      }
+      if (data.aspectWarnings?.length && window.renderAspectWarnings) {
+        window.renderAspectWarnings(warningsEl, data.aspectWarnings);
+      }
+      fileInput.value = '';
+      if (data.uploaded && !data.aspectWarnings?.length) window.location.reload();
+    } catch (err) {
+      if (status) status.textContent = err.message;
+    }
   });
 })();
 

@@ -19,8 +19,22 @@
       <button class="btn btn--primary" type="submit"><%= t('media.upload') %></button>
     </div>
     <div class="upload-status" id="uploadStatus"></div>
+    <div id="aspectWarnings" class="aspect-warnings" <%= aspectWarnings.length ? '' : 'hidden' %>></div>
   </form>
 </div>
+
+<% if (aspectWarnings.length) { %>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.renderAspectWarnings) {
+      window.renderAspectWarnings(
+        document.getElementById('aspectWarnings'),
+        <%- JSON.stringify(aspectWarnings) %>
+      );
+    }
+  });
+</script>
+<% } %>
 
 <form class="filters card" method="get" action="<%= b %>/media">
   <select name="folder">

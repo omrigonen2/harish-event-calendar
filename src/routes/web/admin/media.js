@@ -48,7 +48,9 @@ router.get(
       filterFolder: req.query.folder || '',
       q: req.query.q || '',
       scopedToUser: Boolean(scope),
+      aspectWarnings: req.session.lastAspectWarnings || [],
     });
+    delete req.session.lastAspectWarnings;
   }),
 );
 
@@ -63,11 +65,13 @@ router.post(
     let uploaded = 0;
     let duplicates = 0;
     const created = [];
+    const aspectWarnings = [];
     for (const file of req.files || []) {
-      const { duplicate, asset } = await mediaService.uploadImage(req.tenant, req.user._id, file, {
+      const { duplicate, asset, aspectWarning } = await mediaService.uploadImage(req.tenant, req.user._id, file, {
         folder: req.body.folder || '',
         tags,
       });
+      if (aspectWarning) aspectWarnings.push({ filename: file.originalname, ...aspectWarning });
       if (duplicate) duplicates += 1;
       else {
         uploaded += 1;
@@ -81,7 +85,15 @@ router.post(
         filename: a.filename,
         url: `${base(req)}/media/${a._id}/raw`,
       }));
-      return res.json({ uploaded, duplicates, items });
+      return res.json({ uploaded, duplicates, items, aspectWarnings });
+    }
+    if (aspectWarnings.length) {
+      req.flash('info', translate('flash.mediaAspectWarning', lang(req), {
+        count: aspectWarnings.length,
+        size: `${aspectWarnings[0].width}×${aspectWarnings[0].height}`,
+        target: `${aspectWarnings[0].targetWidth}×${aspectWarnings[0].targetHeight}`,
+      }));
+      req.session.lastAspectWarnings = aspectWarnings;
     }
     req.flash('success', translate('flash.mediaUploaded', lang(req), {
       count: uploaded,

@@ -1,4 +1,10 @@
 import mongoose from '../lib/db.js';
+import {
+  DEFAULT_EVENT_COVER_ASPECT_PROMPT,
+  EVENT_COVER_ASPECT_TOLERANCE,
+  EVENT_COVER_TARGET_HEIGHT,
+  EVENT_COVER_TARGET_WIDTH,
+} from '../config/eventCover.js';
 
 const { Schema } = mongoose;
 
@@ -22,6 +28,12 @@ const platformSettingsSchema = new Schema(
       apiKey: { type: String, default: '' }, // encrypted
       fromEmail: { type: String, default: '' },
       fromName: { type: String, default: '' },
+    },
+    media: {
+      eventCoverAspectPrompt: { type: String, default: DEFAULT_EVENT_COVER_ASPECT_PROMPT },
+      eventCoverTargetWidth: { type: Number, default: EVENT_COVER_TARGET_WIDTH },
+      eventCoverTargetHeight: { type: Number, default: EVENT_COVER_TARGET_HEIGHT },
+      eventCoverAspectTolerance: { type: Number, default: EVENT_COVER_ASPECT_TOLERANCE },
     },
   },
   { timestamps: true },
