@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: event-calendar
+    name: harish-event-calendar
     runtime: node
     plan: starter
     buildCommand: npm install
