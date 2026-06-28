@@ -1,0 +1,102 @@
+<!doctype html>
+
+<html lang="<%= typeof adminLang !== 'undefined' ? adminLang : 'he' %>" dir="<%= typeof adminDir !== 'undefined' ? adminDir : 'rtl' %>">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title><%= title %> · <%= t('app.title') %></title>
+
+  <link rel="stylesheet" href="/css/app.css">
+
+  <% if (typeof tenantSettings !== 'undefined' && tenantSettings) { %>
+
+  <style>
+
+    :root {
+
+      --brand-primary: <%= tenantSettings.colors.primary %>;
+
+      --brand-secondary: <%= tenantSettings.colors.secondary %>;
+
+    }
+
+  </style>
+
+  <% } %>
+
+</head>
+
+<body class="app">
+
+  <header class="topbar">
+
+    <button class="topbar__menu" aria-label="<%= t('nav.menu') %>" onclick="document.body.classList.toggle('nav-open')">☰</button>
+
+    <a class="topbar__brand" href="<%= typeof tenant !== 'undefined' && tenant ? `/admin/${tenant.slug}/dashboard` : '/platform/tenants' %>">
+
+      <%= typeof tenant !== 'undefined' && tenant ? tenant.name : t('app.platformAdmin') %>
+
+    </a>
+
+    <div class="topbar__spacer"></div>
+
+    <% if (typeof tenant !== 'undefined' && tenant) { %>
+
+      <a class="topbar__icon" href="/admin/<%= tenant.slug %>/notifications" aria-label="<%= t('nav.notifications') %>" title="<%= t('nav.notifications') %>">
+
+        <span class="bell">🔔</span>
+
+        <% if (unreadNotifications > 0) { %><span class="badge"><%= unreadNotifications %></span><% } %>
+
+      </a>
+
+      <a class="topbar__icon" href="/c/<%= tenant.slug %>" target="_blank" title="<%= t('nav.viewPublic') %>">🌐</a>
+
+    <% } %>
+
+    <div class="topbar__user">
+
+      <span class="topbar__email"><%= currentUser ? currentUser.email : '' %></span>
+
+      <form method="post" action="/logout" class="inline">
+
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <button class="btn btn--ghost btn--sm" type="submit"><%= t('nav.signOut') %></button>
+
+      </form>
+
+    </div>
+
+  </header>
+
+
+
+  <div class="shell">
+
+    <%- include('../partials/admin-nav') %>
+
+    <main class="content">
+
+      <%- include('../partials/flash') %>
+
+      <%- body %>
+
+    </main>
+
+  </div>
+
+  <div class="nav-scrim" onclick="document.body.classList.remove('nav-open')"></div>
+
+  <script>window.__UI = <%- JSON.stringify(uiStrings || {}) %>;</script>
+
+  <script src="/js/admin.js" defer></script>
+
+</body>
+
+</html>
+

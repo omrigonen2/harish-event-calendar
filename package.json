@@ -1,0 +1,43 @@
+{
+  "name": "event-calender",
+  "version": "1.0.0",
+  "description": "Multi-tenant AI-powered City Events Calendar platform",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "seed": "node scripts/seed.js",
+    "migrate": "node scripts/migrate-platform.js",
+    "db-sync": "node scripts/db-sync.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1075.0",
+    "@aws-sdk/lib-storage": "^3.1075.0",
+    "@aws-sdk/s3-request-presigner": "^3.1075.0",
+    "bcryptjs": "^3.0.3",
+    "connect-mongo": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "csrf-csrf": "^4.0.3",
+    "dompurify": "^3.4.11",
+    "dotenv": "^17.4.2",
+    "ejs": "^6.0.1",
+    "ejs-mate": "^4.0.0",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
+    "express-session": "^1.19.0",
+    "helmet": "^8.2.0",
+    "jsdom": "^29.1.1",
+    "mongoose": "^9.7.2",
+    "multer": "^2.2.0",
+    "nanoid": "^5.1.16",
+    "openai": "^6.44.0",
+    "resend": "^6.14.0",
+    "sharp": "^0.35.2",
+    "zod": "^4.4.3"
+  }
+}

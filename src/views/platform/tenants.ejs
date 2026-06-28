@@ -1,0 +1,50 @@
+<% layout('layouts/admin') -%>
+<% activeNav = 'tenants'; %>
+<div class="page-head">
+  <h1><%= t('platform.tenants') %></h1>
+</div>
+
+<div class="card">
+  <h2 class="card__title"><%= t('platform.createTenant') %></h2>
+  <form method="post" action="/platform/tenants" class="form form--row">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <label class="field">
+      <span><%= t('platform.name') %></span>
+      <input type="text" name="name" required placeholder="לוח התרבות והאירועים של חריש">
+    </label>
+    <label class="field">
+      <span><%= t('platform.slug') %></span>
+      <input type="text" name="slug" placeholder="harish">
+    </label>
+    <button class="btn btn--primary" type="submit"><%= t('common.create') %></button>
+  </form>
+</div>
+
+<div class="card">
+  <table class="table">
+    <thead>
+      <tr><th><%= t('table.name') %></th><th><%= t('table.slug') %></th><th><%= t('table.status') %></th><th><%= t('table.created') %></th><th></th></tr>
+    </thead>
+    <tbody>
+      <% tenants.forEach(function(ten){ %>
+      <tr>
+        <td><%= ten.name %></td>
+        <td><code><%= ten.slug %></code></td>
+        <td><span class="pill pill--<%= ten.status === 'active' ? 'green' : 'red' %>"><%= tStatus(ten.status) %></span></td>
+        <td class="muted"><%= formatDate(ten.createdAt) %></td>
+        <td class="row-actions">
+          <a class="btn btn--sm" href="/admin/<%= ten.slug %>/dashboard"><%= t('platform.open') %></a>
+          <a class="btn btn--sm btn--ghost" href="/platform/tenants/<%= ten._id %>/users"><%= t('platform.usersBtn') %></a>
+          <a class="btn btn--sm btn--ghost" href="/platform/tenants/<%= ten._id %>/integrations"><%= t('platform.integrationsBtn') %></a>
+          <form method="post" action="/platform/tenants/<%= ten._id %>/status" class="inline">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <input type="hidden" name="status" value="<%= ten.status === 'active' ? 'suspended' : 'active' %>">
+            <button class="btn btn--sm btn--ghost" type="submit"><%= ten.status === 'active' ? t('platform.suspend') : t('platform.activate') %></button>
+          </form>
+        </td>
+      </tr>
+      <% }); %>
+      <% if (!tenants.length) { %><tr><td colspan="5" class="muted"><%= t('platform.noTenants') %></td></tr><% } %>
+    </tbody>
+  </table>
+</div>

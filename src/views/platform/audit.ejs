@@ -1,0 +1,4 @@
+<% layout('layouts/admin') -%>
+<% activeNav = 'platform-audit'; %>
+<div class="page-head"><h1><%= t('audit.globalTitle') %></h1><p class="muted"><%= t('audit.entries', { count: total }) %></p></div>
+<%- include('../partials/audit-table', { items }) %>

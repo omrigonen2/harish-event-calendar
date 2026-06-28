@@ -1,0 +1,374 @@
+<% layout('layouts/admin') -%>
+
+<%
+
+  const b = `/admin/${tenant.slug}`;
+
+  const supported = tenantSettings.supportedLanguages || [];
+
+  const isEdit = Boolean(event);
+
+  const action = isEdit ? `${b}/events/${event._id}` : `${b}/events`;
+
+  function tr(code){
+
+    if(!event) return { title:'', descriptionHtml:'' };
+
+    const t = event.translations;
+
+    const v = t.get ? t.get(code) : t[code];
+
+    return v || { title:'', descriptionHtml:'' };
+
+  }
+
+  const sel = {
+
+    cats: (event ? (event.categoryIds||[]).map(c => String(c._id || c)) : []),
+
+    auds: (event ? (event.audienceIds||[]).map(a => String(a._id || a)) : []),
+
+    chars: (event ? (event.eventCharacterIds||[]).map(c => String(c._id || c)) : []),
+
+  };
+
+%>
+
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+
+
+
+<div class="page-head">
+
+  <h1><%= isEdit ? t('events.edit') : t('events.new') %></h1>
+
+  <a class="btn btn--ghost" href="<%= b %>/events"><%= t('common.back') %></a>
+
+</div>
+
+
+
+<form method="post" action="<%= action %>" class="form event-form" id="eventForm"
+
+  data-upload-url="<%= b %>/media/upload"
+
+  data-picker-url="<%= b %>/media/picker">
+
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+
+
+  <div class="grid grid--main">
+
+    <div>
+
+      <div class="card">
+
+        <div class="tabs" role="tablist">
+
+          <% supported.forEach(function(code, i){
+
+             const hasTitle = tr(code).title;
+
+             const missing = isEdit && !hasTitle; %>
+
+            <button type="button" class="tab <%= i===0?'is-active':'' %> <%= missing ? 'tab--missing' : '' %>" data-tab="lang-<%= code %>">
+
+              <%= languageLabel(code) %><% if (missing) { %> ·<% } %>
+
+            </button>
+
+          <% }); %>
+
+        </div>
+
+        <% supported.forEach(function(code, i){ %>
+
+          <div class="tab-panel <%= i===0?'is-active':'' %>" id="lang-<%= code %>">
+
+            <label class="field">
+
+              <span><%= t('events.titleField') %> (<%= code %>)</span>
+
+              <input type="text" name="translations[<%= code %>][title]" value="<%= tr(code).title %>">
+
+            </label>
+
+            <label class="field">
+
+              <span><%= t('events.description') %> (<%= code %>)</span>
+
+            </label>
+
+            <div class="quill" data-lang="<%= code %>"><%- tr(code).descriptionHtml %></div>
+
+            <textarea class="quill-source" name="translations[<%= code %>][descriptionHtml]" hidden><%= tr(code).descriptionHtml %></textarea>
+
+          </div>
+
+        <% }); %>
+
+      </div>
+
+
+
+      <div class="card">
+
+        <h2 class="card__title"><%= t('events.aiTranslation') %></h2>
+
+        <% if (isEdit) { %>
+
+        <div class="ai-translate">
+
+          <div class="form--row">
+
+            <label class="field"><span><%= t('events.aiSource') %></span>
+
+              <select id="aiSource">
+
+                <% supported.forEach(function(code){ %><option value="<%= code %>"><%= languageLabel(code) %></option><% }); %>
+
+              </select>
+
+            </label>
+
+            <div class="field"><span><%= t('events.aiTargets') %></span>
+
+              <p class="muted sm"><%= t('events.aiTargetsHelp') %></p>
+
+              <div class="checks">
+
+                <% supported.forEach(function(code){ %>
+
+                  <label class="check ai-target-row" data-lang="<%= code %>">
+
+                    <input type="checkbox" class="ai-target" value="<%= code %>"> <%= languageLabel(code) %> (<%= code %>)
+
+                  </label>
+
+                <% }); %>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <button type="button" class="btn btn--secondary" id="aiTranslateBtn"
+
+            data-url="<%= b %>/ai/translate/<%= event._id %>/preview"
+
+            data-save="<%= b %>/ai/translate/<%= event._id %>/save"><%= t('events.aiGenerate') %></button>
+
+          <div id="aiPreview" class="ai-preview"></div>
+
+        </div>
+
+        <% } else { %>
+
+          <p class="muted"><%= t('events.aiSaveFirst') %></p>
+
+        <% } %>
+
+      </div>
+
+    </div>
+
+
+
+    <div>
+
+      <div class="card">
+
+        <h2 class="card__title"><%= t('events.dateTime') %></h2>
+
+        <label class="check"><input type="checkbox" name="allDay" <%= event && event.allDay ? 'checked':'' %>> <%= t('events.allDay') %></label>
+
+        <label class="field"><span><%= t('events.startDate') %> *</span>
+
+          <input type="date" name="startDate" required value="<%= event ? formatDateInput(event.startAt) : '' %>"></label>
+
+        <label class="field"><span><%= t('events.startTime') %></span>
+
+          <input type="time" name="startTime" value="<%= event ? formatTimeInput(event.startAt) : '' %>"></label>
+
+        <label class="field"><span><%= t('events.endDate') %></span>
+
+          <input type="date" name="endDate" value="<%= event && event.endAt ? formatDateInput(event.endAt) : '' %>"></label>
+
+        <label class="field"><span><%= t('events.endTime') %></span>
+
+          <input type="time" name="endTime" value="<%= event && event.endAt ? formatTimeInput(event.endAt) : '' %>"></label>
+
+      </div>
+
+
+
+      <div class="card">
+
+        <h2 class="card__title"><%= t('events.pricing') %></h2>
+
+        <label class="check"><input type="radio" name="pricingType" value="free" <%= !event || event.pricing.isFree ? 'checked':'' %>> <%= t('events.free') %></label>
+
+        <label class="check"><input type="radio" name="pricingType" value="paid" <%= event && !event.pricing.isFree ? 'checked':'' %>> <%= t('events.paid') %></label>
+
+        <div class="form--row">
+
+          <label class="field"><span><%= t('events.price') %></span>
+
+            <input type="number" name="price" min="0" step="0.01" value="<%= event ? event.pricing.price : 0 %>"></label>
+
+          <label class="field"><span><%= t('events.currency') %></span>
+
+            <input type="text" name="currency" value="<%= event ? event.pricing.currency : 'ILS' %>"></label>
+
+        </div>
+
+      </div>
+
+
+
+      <div class="card">
+
+        <h2 class="card__title"><%= t('events.cover') %></h2>
+
+        <input type="hidden" name="coverMediaId" id="coverMediaId" value="<%= event && event.coverMediaId ? event.coverMediaId : '' %>">
+
+        <div class="cover-preview" id="coverPreview">
+
+          <% if (event && event.coverMediaId) { %>
+
+            <img src="<%= b %>/media/<%= event.coverMediaId %>/raw" alt="cover">
+
+          <% } else { %><span class="muted"><%= t('events.noImage') %></span><% } %>
+
+        </div>
+
+        <button type="button" class="btn btn--ghost btn--sm" data-picker="cover" data-url="<%= b %>/media/picker"><%= t('events.chooseImage') %></button>
+
+        <button type="button" class="btn btn--ghost btn--sm" id="clearCover"><%= t('events.clearImage') %></button>
+
+      </div>
+
+
+
+      <div class="card">
+
+        <h2 class="card__title"><%= t('events.categories') %></h2>
+
+        <div class="checks">
+
+          <% categories.forEach(function(c){ %>
+
+            <label class="check"><input type="checkbox" name="categoryIds" value="<%= c._id %>" <%= sel.cats.includes(String(c._id))?'checked':'' %>>
+
+              <span class="dot" style="background: <%= c.color %>"></span> <%= i18n(c.name, tenantSettings.defaultLanguage) %></label>
+
+          <% }); %>
+
+          <% if (!categories.length) { %><p class="muted sm"><%= t('events.noCategories') %></p><% } %>
+
+        </div>
+
+      </div>
+
+      <div class="card">
+
+        <h2 class="card__title"><%= t('events.audiences') %></h2>
+
+        <div class="checks">
+
+          <% audiences.forEach(function(a){ %>
+
+            <label class="check"><input type="checkbox" name="audienceIds" value="<%= a._id %>" <%= sel.auds.includes(String(a._id))?'checked':'' %>> <%= i18n(a.name, tenantSettings.defaultLanguage) %></label>
+
+          <% }); %>
+
+          <% if (!audiences.length) { %><p class="muted sm"><%= t('events.noAudiences') %></p><% } %>
+
+        </div>
+
+      </div>
+
+      <div class="card">
+
+        <h2 class="card__title"><%= t('events.eventCharacters') %></h2>
+
+        <div class="checks">
+
+          <% (eventCharacters || []).forEach(function(c){ %>
+
+            <label class="check"><input type="checkbox" name="eventCharacterIds" value="<%= c._id %>" <%= sel.chars.includes(String(c._id))?'checked':'' %>> <%= i18n(c.name, tenantSettings.defaultLanguage) %></label>
+
+          <% }); %>
+
+          <% if (!(eventCharacters || []).length) { %><p class="muted sm"><%= t('events.noEventCharacters') %></p><% } %>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="form__sticky">
+
+    <button class="btn btn--primary" type="submit"><%= t('events.save') %></button>
+
+    <% if (isEdit) { %>
+
+      <a class="btn btn--ghost" href="/c/<%= tenant.slug %>/events/<%= event._id %>" target="_blank"><%= t('common.preview') %></a>
+
+    <% } %>
+
+  </div>
+
+</form>
+
+
+
+<div class="modal" id="pickerModal" hidden>
+
+  <div class="modal__box">
+
+    <div class="modal__head">
+
+      <h3><%= t('media.selectImage') %></h3>
+
+      <button type="button" class="modal__close" id="pickerClose">×</button>
+
+    </div>
+
+    <div class="modal__body">
+
+      <div class="picker-upload">
+
+        <label class="btn btn--secondary btn--sm">
+
+          <%= t('events.uploadImage') %>
+
+          <input type="file" id="pickerUploadInput" accept="image/*" hidden>
+
+        </label>
+
+        <span class="muted sm" id="pickerUploadStatus"></span>
+
+      </div>
+
+      <div class="picker-grid" id="pickerGrid"></div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+
+<script src="/js/event-form.js" defer></script>
+

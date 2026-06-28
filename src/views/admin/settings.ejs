@@ -1,0 +1,116 @@
+<% layout('layouts/admin') -%>
+<% const b = `/admin/${tenant.slug}`; const supported = tenantSettings.supportedLanguages || []; %>
+<div class="page-head"><h1><%= t('settings.title') %></h1></div>
+
+<% if (newToken) { %>
+<div class="card card--highlight">
+  <h2 class="card__title"><%= t('settings.newTokenTitle') %></h2>
+  <p class="muted"><%= t('settings.newTokenHelp') %></p>
+  <code class="token"><%= newToken %></code>
+</div>
+<% } %>
+
+<div class="grid grid--2">
+  <div class="card">
+    <h2 class="card__title"><%= t('settings.general') %></h2>
+    <form method="post" action="<%= b %>/settings/general" class="form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label class="field"><span><%= t('settings.calendarName') %></span><input type="text" name="name" value="<%= tenant.name %>"></label>
+      <label class="field"><span><%= t('settings.description') %></span><textarea name="description" rows="3"><%= tenantSettings.description %></textarea></label>
+      <div class="form--row">
+        <label class="field"><span><%= t('settings.primaryColor') %></span><input type="color" name="primaryColor" value="<%= tenantSettings.colors.primary %>"></label>
+        <label class="field"><span><%= t('settings.secondaryColor') %></span><input type="color" name="secondaryColor" value="<%= tenantSettings.colors.secondary %>"></label>
+      </div>
+      <label class="field"><span><%= t('settings.logoMediaId') %></span><input type="text" name="logoMediaId" value="<%= tenantSettings.logoMediaId || '' %>" placeholder="<%= t('settings.logoPlaceholder') %>"></label>
+      <label class="field"><span><%= t('settings.seoTitle') %></span><input type="text" name="seoTitle" value="<%= tenantSettings.seo.title %>"></label>
+      <label class="field"><span><%= t('settings.seoDescription') %></span><textarea name="seoDescription" rows="2"><%= tenantSettings.seo.description %></textarea></label>
+      <button class="btn btn--primary" type="submit"><%= t('common.save') %></button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2 class="card__title"><%= t('settings.localization') %></h2>
+    <form method="post" action="<%= b %>/settings/localization" class="form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="field"><span><%= t('settings.supportedLangs') %></span>
+        <div class="checks">
+          <% LANGUAGES.forEach(function(l){ %>
+            <label class="check"><input type="checkbox" name="lang_<%= l.code %>" <%= supported.includes(l.code)?'checked':'' %>> <%= l.label %> (<%= l.code %>)</label>
+          <% }); %>
+        </div>
+      </div>
+      <label class="field"><span><%= t('settings.defaultLang') %></span>
+        <select name="defaultLanguage">
+          <% LANGUAGES.forEach(function(l){ %><option value="<%= l.code %>" <%= tenantSettings.defaultLanguage===l.code?'selected':'' %>><%= l.label %></option><% }); %>
+        </select>
+      </label>
+      <label class="field"><span><%= t('settings.timezone') %></span><input type="text" name="timezone" value="<%= tenantSettings.timezone %>"></label>
+      <label class="field"><span><%= t('settings.dateFormat') %></span><input type="text" name="dateFormat" value="<%= tenantSettings.dateFormat %>"></label>
+      <button class="btn btn--primary" type="submit"><%= t('common.save') %></button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2 class="card__title"><%= t('settings.ai') %></h2>
+    <p class="muted sm"><%= t('settings.aiPlatformNote') %></p>
+    <form method="post" action="<%= b %>/settings/ai" class="form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label class="check"><input type="checkbox" name="autoTranslateOnSave" <%= tenantSettings.autoTranslateOnSave !== false ? 'checked' : '' %>> <%= t('events.autoTranslate') %></label>
+      <p class="muted sm"><%= t('events.autoTranslateHelp') %></p>
+      <label class="field"><span><%= t('settings.marketingPrompt') %></span>
+        <textarea name="aiDefaultPrompt" rows="4"><%= tenantSettings.aiDefaultPrompt %></textarea></label>
+      <label class="field"><span><%= t('settings.preferredModel') %></span>
+        <% if (modelError) { %>
+          <input type="text" name="aiPreferredModel" value="<%= tenantSettings.aiPreferredModel %>">
+          <small class="muted"><%= t('platform.modelLoadError') %>: <%= modelError %></small>
+        <% } else { %>
+          <select name="aiPreferredModel">
+            <% models.forEach(function(m){ %><option value="<%= m %>" <%= tenantSettings.aiPreferredModel===m?'selected':'' %>><%= m %></option><% }); %>
+            <% if (!models.includes(tenantSettings.aiPreferredModel)) { %><option value="<%= tenantSettings.aiPreferredModel %>" selected><%= tenantSettings.aiPreferredModel %></option><% } %>
+          </select>
+        <% } %>
+      </label>
+      <button class="btn btn--primary" type="submit"><%= t('common.save') %></button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2 class="card__title"><%= t('settings.apiTokens') %></h2>
+    <form method="post" action="<%= b %>/settings/tokens" class="form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label class="field"><span><%= t('settings.tokenName') %></span><input type="text" name="name" required placeholder="Mobile app"></label>
+      <label class="field"><span><%= t('settings.webhookUrl') %></span><input type="url" name="webhookUrl"></label>
+      <div class="field"><span><%= t('settings.scopes') %></span>
+        <div class="checks">
+          <% apiScopes.forEach(function(s){ %>
+            <label class="check"><input type="checkbox" name="scope_<%= s %>"> <%= s %></label>
+          <% }); %>
+        </div>
+      </div>
+      <button class="btn btn--primary" type="submit"><%= t('settings.createToken') %></button>
+    </form>
+
+    <table class="table">
+      <thead><tr><th><%= t('table.name') %></th><th><%= t('settings.prefix') %></th><th><%= t('settings.scopes') %></th><th><%= t('table.status') %></th><th></th></tr></thead>
+      <tbody>
+        <% tokens.forEach(function(tok){ %>
+        <tr>
+          <td><%= tok.name %></td>
+          <td><code><%= tok.prefix %>…</code></td>
+          <td class="muted sm"><%= (tok.scopes||[]).join(', ') %></td>
+          <td><span class="pill pill--<%= tok.revoked ? 'red':'green' %>"><%= tok.revoked ? tStatus('revoked') : tStatus('active') %></span></td>
+          <td>
+            <% if (!tok.revoked) { %>
+            <form method="post" action="<%= b %>/settings/tokens/<%= tok._id %>/revoke" class="inline" onsubmit="return confirm('<%= t('settings.revokeConfirm') %>')">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button class="btn btn--sm btn--danger" type="submit"><%= t('settings.revokeToken') %></button>
+            </form>
+            <% } %>
+          </td>
+        </tr>
+        <% }); %>
+        <% if (!tokens.length) { %><tr><td colspan="5" class="muted"><%= t('common.noResults') %></td></tr><% } %>
+      </tbody>
+    </table>
+  </div>
+</div>

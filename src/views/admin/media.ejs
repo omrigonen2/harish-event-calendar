@@ -1,0 +1,61 @@
+<% layout('layouts/admin') -%>
+<% const b = `/admin/${tenant.slug}`; %>
+<div class="page-head"><h1><%= t('media.title') %></h1></div>
+
+<% if (scopedToUser) { %>
+<p class="muted sm"><%= t('media.myMediaNote') %></p>
+<% } %>
+
+<div class="card">
+  <form method="post" action="<%= b %>/media/upload" enctype="multipart/form-data" class="uploader" id="uploader" data-url="<%= b %>/media/upload">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <div class="dropzone" id="dropzone">
+      <p><%= t('media.dropzone') %></p>
+      <input type="file" name="files" id="fileInput" accept="image/*" multiple hidden>
+    </div>
+    <div class="form--row">
+      <label class="field"><span><%= t('media.folder') %></span><input type="text" name="folder" placeholder="<%= t('common.optional') %>"></label>
+      <label class="field"><span><%= t('media.tags') %></span><input type="text" name="tags" placeholder="poster, summer"></label>
+      <button class="btn btn--primary" type="submit"><%= t('media.upload') %></button>
+    </div>
+    <div class="upload-status" id="uploadStatus"></div>
+  </form>
+</div>
+
+<form class="filters card" method="get" action="<%= b %>/media">
+  <select name="folder">
+    <option value=""><%= t('media.allFolders') %></option>
+    <% folders.filter(Boolean).forEach(function(f){ %><option value="<%= f %>" <%= filterFolder===f?'selected':'' %>><%= f %></option><% }); %>
+  </select>
+  <input type="search" name="q" value="<%= q %>" placeholder="<%= t('media.search') %>">
+  <button class="btn btn--primary" type="submit"><%= t('common.filter') %></button>
+  <a class="btn btn--ghost" href="<%= b %>/media"><%= t('common.reset') %></a>
+</form>
+
+<div class="media-grid">
+  <% assets.forEach(function(a){ %>
+  <div class="media-card">
+    <a href="<%= b %>/media/<%= a._id %>/raw" target="_blank">
+      <img src="<%= b %>/media/<%= a._id %>/raw" alt="<%= a.filename %>" loading="lazy">
+    </a>
+    <div class="media-card__body">
+      <div class="media-card__name" title="<%= a.filename %>"><%= a.filename %></div>
+      <div class="muted sm"><%= a.width %>×<%= a.height %> · <%= Math.round(a.size/1024) %>KB</div>
+      <% if (a.uploadedBy && !scopedToUser) { %>
+        <div class="muted sm"><%= t('media.uploadedBy') %>: <%= a.uploadedBy.name || a.uploadedBy.email %></div>
+      <% } %>
+      <form method="post" action="<%= b %>/media/<%= a._id %>/meta" class="form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <input type="text" name="folder" value="<%= a.folder %>" placeholder="<%= t('media.folder') %>" class="sm">
+        <input type="text" name="tags" value="<%= (a.tags||[]).join(', ') %>" placeholder="tags" class="sm">
+        <button class="btn btn--sm btn--primary" type="submit"><%= t('common.save') %></button>
+      </form>
+      <form method="post" action="<%= b %>/media/<%= a._id %>/delete" class="inline" onsubmit="return confirm('<%= t('media.deleteConfirm') %>')">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button class="btn btn--sm btn--danger" type="submit"><%= t('common.delete') %></button>
+      </form>
+    </div>
+  </div>
+  <% }); %>
+  <% if (!assets.length) { %><p class="muted"><%= t('media.noMedia') %></p><% } %>
+</div>

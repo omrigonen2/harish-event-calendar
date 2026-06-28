@@ -1,0 +1,62 @@
+<% layout('layouts/admin') -%>
+<div class="page-head">
+  <h1><%= t('dashboard.title') %></h1>
+  <a class="btn btn--primary" href="/admin/<%= tenant.slug %>/events/new">+ <%= t('dashboard.newEvent') %></a>
+</div>
+
+<div class="stat-grid">
+  <div class="stat"><div class="stat__num"><%= data.upcoming %></div><div class="stat__label"><%= t('dashboard.upcoming') %></div></div>
+  <div class="stat"><div class="stat__num"><%= data.published %></div><div class="stat__label"><%= t('dashboard.published') %></div></div>
+  <div class="stat"><div class="stat__num"><%= data.drafts %></div><div class="stat__label"><%= t('dashboard.drafts') %></div></div>
+  <div class="stat"><div class="stat__num"><%= data.thisMonth %></div><div class="stat__label"><%= t('dashboard.thisMonth') %></div></div>
+  <div class="stat"><div class="stat__num"><%= data.aiUsage %></div><div class="stat__label"><%= t('dashboard.aiUsage') %></div></div>
+  <div class="stat"><div class="stat__num"><%= data.editorCount %></div><div class="stat__label"><%= t('dashboard.users') %></div></div>
+</div>
+
+<div class="grid grid--2">
+  <div class="card">
+    <h2 class="card__title"><%= t('dashboard.completion') %></h2>
+    <div class="meter">
+      <div class="meter__label"><%= t('dashboard.translationCompletion') %> <strong><%= data.translationCompletion %>%</strong></div>
+      <div class="meter__bar"><span style="width: <%= data.translationCompletion %>%"></span></div>
+    </div>
+    <div class="meter">
+      <div class="meter__label"><%= t('dashboard.contentCompletion') %> <strong><%= data.contentCompletion %>%</strong></div>
+      <div class="meter__bar"><span style="width: <%= data.contentCompletion %>%"></span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="card__title"><%= t('dashboard.popularCategories') %></h2>
+    <% if (data.topCategories.length) { %>
+      <ul class="list">
+        <% data.topCategories.forEach(function(tc){ if(!tc.category) return; %>
+          <li><span class="dot" style="background: <%= tc.category.color %>"></span>
+            <%= i18n(tc.category.name, tenantSettings.defaultLanguage) %>
+            <span class="muted">· <%= tc.count %></span></li>
+        <% }); %>
+      </ul>
+    <% } else { %><p class="muted"><%= t('dashboard.noCategories') %></p><% } %>
+  </div>
+</div>
+
+<div class="card">
+  <h2 class="card__title"><%= t('dashboard.recentlyUpdated') %></h2>
+  <table class="table">
+    <thead><tr><th><%= t('table.title') %></th><th><%= t('table.status') %></th><th><%= t('table.start') %></th><th><%= t('table.updated') %></th><th></th></tr></thead>
+    <tbody>
+      <% data.recentEvents.forEach(function(ev){
+           const tr = ev.translations && (ev.translations[tenantSettings.defaultLanguage] || Object.values(ev.translations)[0]);
+           const evTitle = tr ? tr.title : t('public.untitled'); %>
+      <tr>
+        <td><%= evTitle %></td>
+        <td><span class="pill pill--<%= ev.status==='published'?'green':(ev.status==='draft'?'amber':'gray') %>"><%= tStatus(ev.status) %></span></td>
+        <td class="muted"><%= formatDate(ev.startAt, { withTime: true }) %></td>
+        <td class="muted"><%= formatDate(ev.updatedAt) %></td>
+        <td><a class="btn btn--sm" href="/admin/<%= tenant.slug %>/events/<%= ev._id %>/edit"><%= t('common.edit') %></a></td>
+      </tr>
+      <% }); %>
+      <% if (!data.recentEvents.length) { %><tr><td colspan="5" class="muted"><%= t('events.noMatch') %></td></tr><% } %>
+    </tbody>
+  </table>
+</div>

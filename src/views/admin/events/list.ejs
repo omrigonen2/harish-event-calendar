@@ -1,0 +1,131 @@
+<% layout('layouts/admin') -%>
+<% const b = `/admin/${tenant.slug}`; const lang = tenantSettings.defaultLanguage;
+   const perms = (typeof tenantPermissions !== 'undefined' && tenantPermissions) ? tenantPermissions : {};
+   const canWrite = perms.tenantManage === true || perms.eventsWrite === true;
+   const canPublish = perms.tenantManage === true || perms.eventsPublish === true; %>
+<div class="page-head">
+  <h1><%= t('events.title') %></h1>
+  <div class="page-head__actions">
+    <% const supportedLangs = tenantSettings.supportedLanguages || []; %>
+    <% if (canWrite && supportedLangs.length > 1) { %>
+    <form method="post" action="<%= b %>/events/fill-missing" class="inline">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <input type="hidden" name="returnTo" value="<%= currentPath %><%= Object.keys(query || {}).length ? '?' + new URLSearchParams(query).toString() : '' %>">
+      <button type="submit" class="btn btn--ghost btn--sm"><%= t('taxonomy.fillAllMissing') %></button>
+    </form>
+    <% } %>
+    <% if (canWrite) { %>
+    <a class="btn btn--primary" href="<%= b %>/events/new">+ <%= t('events.new') %></a>
+    <% } %>
+  </div>
+</div>
+
+<form class="filters card" method="get" action="<%= b %>/events">
+  <input type="search" name="q" value="<%= filters.q || '' %>" placeholder="<%= t('events.search') %>">
+  <select name="status">
+    <option value=""><%= t('events.anyStatus') %></option>
+    <% ['draft','published','archived'].forEach(function(s){ %>
+      <option value="<%= s %>" <%= filters.status===s?'selected':'' %>><%= tStatus(s) %></option>
+    <% }); %>
+  </select>
+  <select name="category">
+    <option value=""><%= t('events.anyCategory') %></option>
+    <% categories.forEach(function(c){ %>
+      <option value="<%= c._id %>" <%= String(filters.category)===String(c._id)?'selected':'' %>><%= i18n(c.name, lang) %></option>
+    <% }); %>
+  </select>
+  <select name="audience">
+    <option value=""><%= t('events.anyAudience') %></option>
+    <% audiences.forEach(function(a){ %>
+      <option value="<%= a._id %>" <%= String(filters.audience)===String(a._id)?'selected':'' %>><%= i18n(a.name, lang) %></option>
+    <% }); %>
+  </select>
+  <select name="character">
+    <option value=""><%= t('events.anyEventCharacter') %></option>
+    <% (eventCharacters || []).forEach(function(c){ %>
+      <option value="<%= c._id %>" <%= String(filters.character)===String(c._id)?'selected':'' %>><%= i18n(c.name, lang) %></option>
+    <% }); %>
+  </select>
+  <% if (users && users.length) { %>
+  <select name="creator">
+    <option value=""><%= t('events.anyCreator') %></option>
+    <% users.forEach(function(u){ %>
+      <option value="<%= u._id %>" <%= String(filters.creator)===String(u._id)?'selected':'' %>><%= u.email %></option>
+    <% }); %>
+  </select>
+  <% } %>
+  <select name="price">
+    <option value=""><%= t('events.anyPrice') %></option>
+    <option value="free" <%= filters.price==='free'?'selected':'' %>><%= t('events.free') %></option>
+    <option value="paid" <%= filters.price==='paid'?'selected':'' %>><%= t('events.paid') %></option>
+  </select>
+  <input type="date" name="from" value="<%= filters.from || '' %>" title="<%= t('events.fromDate') %>">
+  <input type="date" name="to" value="<%= filters.to || '' %>" title="<%= t('events.toDate') %>">
+  <select name="sort">
+    <% ['newest','oldest','upcoming','alphabetical','updated'].forEach(function(s){ %>
+      <option value="<%= s %>" <%= sort===s?'selected':'' %>><%= tSort(s) %></option>
+    <% }); %>
+  </select>
+  <button class="btn btn--primary" type="submit"><%= t('common.filter') %></button>
+  <a class="btn btn--ghost" href="<%= b %>/events"><%= t('common.reset') %></a>
+</form>
+
+<div class="card">
+  <table class="table">
+    <thead><tr><th><%= t('table.title') %></th><th><%= t('table.status') %></th><th><%= t('table.start') %></th><th><%= t('table.languages') %></th><th><%= t('table.creator') %></th><th></th></tr></thead>
+    <tbody>
+      <% result.items.forEach(function(ev){
+           const supported = tenantSettings.supportedLanguages || [];
+           const missing = eventService.missingLanguages(ev, supported); %>
+      <tr>
+        <td>
+          <a href="<%= b %>/events/<%= ev._id %>/edit">
+            <% const tr = ev.translations && (ev.translations[lang] || Object.values(ev.translations)[0]); %>
+            <%= (tr && tr.title) ? tr.title : t('public.untitled') %>
+          </a>
+        </td>
+        <td><span class="pill pill--<%= ev.status==='published'?'green':(ev.status==='draft'?'amber':'gray') %>"><%= tStatus(ev.status) %></span></td>
+        <td class="muted nowrap"><%= formatDate(ev.startAt, { withTime: true }) %></td>
+        <td>
+          <% supported.forEach(function(code){ %>
+            <span class="lang-chip <%= missing.includes(code) ? 'lang-chip--missing' : '' %>"><%= code %></span>
+          <% }); %>
+        </td>
+        <td class="muted sm"><%= ev.createdBy ? ev.createdBy.email : '' %></td>
+        <td class="row-actions nowrap">
+          <% if (canWrite) { %>
+          <a class="btn btn--sm" href="<%= b %>/events/<%= ev._id %>/edit"><%= t('common.edit') %></a>
+          <% } %>
+          <% if (canPublish) { %>
+          <% if (ev.status !== 'published') { %>
+          <form method="post" action="<%= b %>/events/<%= ev._id %>/status" class="inline">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="status" value="published">
+            <button class="btn btn--sm btn--primary" type="submit"><%= t('events.publish') %></button>
+          </form>
+          <% } else { %>
+          <form method="post" action="<%= b %>/events/<%= ev._id %>/status" class="inline">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="status" value="archived">
+            <button class="btn btn--sm btn--ghost" type="submit"><%= t('events.archive') %></button>
+          </form>
+          <% } %>
+          <% } %>
+          <% if (canWrite) { %>
+          <form method="post" action="<%= b %>/events/<%= ev._id %>/delete" class="inline" onsubmit="return confirm('<%= t('events.deleteConfirm') %>')">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="btn btn--sm btn--danger" type="submit"><%= t('common.delete') %></button>
+          </form>
+          <% } %>
+        </td>
+      </tr>
+      <% }); %>
+      <% if (!result.items.length) { %><tr><td colspan="6" class="muted"><%= t('events.noMatch') %></td></tr><% } %>
+    </tbody>
+  </table>
+  <% if (result.pages > 1) { %>
+  <div class="pager">
+    <% for (let p=1; p<=result.pages; p++) { %>
+      <a class="pager__item <%= p===result.page?'is-active':'' %>" href="?<%= new URLSearchParams(Object.assign({}, query, { page: p })).toString() %>"><%= p %></a>
+    <% } %>
+  </div>
+  <% } %>
+</div>

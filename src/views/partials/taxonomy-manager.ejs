@@ -1,0 +1,110 @@
+<%
+  // Locals: items, kind ('category'|'audience'|'eventCharacter'), b, supported, def, others, hasColor,
+  //         addTitle, allTitle, noYet, deleteConfirm
+  const pathByKind = {
+    category: 'categories',
+    audience: 'audiences',
+    eventCharacter: 'event-characters',
+  };
+  const path = pathByKind[kind] || 'categories';
+  function nm(item, code) { return (item.name && item.name[code]) ? item.name[code] : ''; }
+%>
+<div class="tax-manager" data-kind="<%= kind %>" data-translate-url="<%= b %>/taxonomy/translate">
+  <div class="card">
+    <h2 class="card__title"><%= addTitle %></h2>
+    <form method="post" action="<%= b %>/<%= path %>" class="tax-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <input type="hidden" name="sortOrder" value="0">
+      <div class="tax-form__main">
+        <% if (hasColor) { %>
+          <label class="tax-color-field">
+            <span><%= t('categories.color') %></span>
+            <input class="tax-color" type="color" name="color" value="#1F54F4">
+          </label>
+        <% } %>
+        <label class="field tax-form__name">
+          <span><%= t('taxonomy.mainLang') %> · <%= languageLabel(def) %></span>
+          <input type="text" name="name_<%= def %>" data-lang="<%= def %>" autocomplete="off" required>
+        </label>
+        <button class="btn btn--primary" type="submit"><%= t('common.create') %></button>
+      </div>
+      <% if (others.length) { %>
+        <details class="tax-extra">
+          <summary><%= t('taxonomy.otherLangs') %></summary>
+          <div class="tax-extra__body">
+            <div class="tax-langs">
+              <% others.forEach(function(code){ %>
+                <label class="field">
+                  <span><%= languageLabel(code) %> (<%= code %>)</span>
+                  <input type="text" name="name_<%= code %>" data-lang="<%= code %>" autocomplete="off">
+                </label>
+              <% }); %>
+            </div>
+            <button type="button" class="btn btn--ghost btn--sm tax-translate" data-source="<%= def %>">
+              <%= t('taxonomy.translate') %>
+            </button>
+          </div>
+        </details>
+      <% } %>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card__head">
+      <h2 class="card__title"><%= allTitle %></h2>
+      <% if (items.length && supported.length > 1) { %>
+        <form method="post" action="<%= b %>/taxonomy/fill-missing" class="inline">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="hidden" name="kind" value="<%= kind %>">
+          <button type="submit" class="btn btn--ghost btn--sm"><%= t('taxonomy.fillAllMissing') %></button>
+        </form>
+      <% } %>
+    </div>
+    <% if (!items.length) { %><p class="muted"><%= noYet %></p><% } %>
+    <div class="tax-list" data-reorder-url="<%= b %>/<%= path %>/reorder">
+      <% items.forEach(function(item){ %>
+        <div class="tax-item" draggable="true" data-id="<%= item._id %>">
+          <div class="tax-item__head">
+            <span class="tax-drag" title="<%= t('taxonomy.dragHint') %>">&#x2630;</span>
+            <% if (hasColor) { %><span class="tax-swatch" style="background: <%= item.color || '#64748b' %>"></span><% } %>
+            <button type="button" class="tax-item__name" aria-expanded="false"><%= nm(item, def) || t('taxonomy.noName') %></button>
+            <span class="tax-chips">
+              <% supported.forEach(function(code){ %>
+                <span class="tax-chip <%= nm(item, code) ? 'is-set' : 'is-missing' %>"><%= code %></span>
+              <% }); %>
+            </span>
+            <span class="tax-item__toggle" aria-hidden="true">&#x25BE;</span>
+          </div>
+          <div class="tax-item__body">
+            <form method="post" action="<%= b %>/<%= path %>/<%= item._id %>" class="tax-form">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <input type="hidden" name="sortOrder" value="<%= item.sortOrder %>">
+              <div class="tax-langs">
+                <% supported.forEach(function(code){ %>
+                  <label class="field">
+                    <span><%= languageLabel(code) %> (<%= code %>)<% if (code === def) { %> · <%= t('taxonomy.mainLang') %><% } %></span>
+                    <input type="text" name="name_<%= code %>" data-lang="<%= code %>" value="<%= nm(item, code) %>" autocomplete="off">
+                  </label>
+                <% }); %>
+              </div>
+              <div class="tax-item__actions">
+                <% if (hasColor) { %>
+                  <label class="tax-color-field">
+                    <span><%= t('categories.color') %></span>
+                    <input type="color" name="color" value="<%= item.color || '#64748b' %>">
+                  </label>
+                <% } %>
+                <button type="button" class="btn btn--ghost btn--sm tax-translate" data-source="<%= def %>"><%= t('taxonomy.translate') %></button>
+                <button class="btn btn--primary btn--sm" type="submit"><%= t('common.save') %></button>
+              </div>
+            </form>
+            <form method="post" action="<%= b %>/<%= path %>/<%= item._id %>/delete" class="inline tax-delete" onsubmit="return confirm('<%= deleteConfirm %>')">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button class="btn btn--danger btn--sm" type="submit"><%= t('common.delete') %></button>
+            </form>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+</div>

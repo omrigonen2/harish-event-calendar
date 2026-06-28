@@ -1,0 +1,35 @@
+<% layout('layouts/admin') -%>
+<% const b = `/admin/${tenant.slug}`; %>
+<div class="page-head">
+  <h1><%= t('notifications.title') %></h1>
+  <form method="post" action="<%= b %>/notifications/read-all" class="inline">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <button class="btn btn--ghost" type="submit"><%= t('notifications.markAllRead') %></button>
+  </form>
+</div>
+
+<div class="card">
+  <ul class="notif-list">
+    <% items.forEach(function(n){ %>
+    <li class="notif <%= n.readAt ? '' : 'notif--unread' %>">
+      <div class="notif__body">
+        <div class="notif__title"><%= n.title %></div>
+        <% if (n.body) { %><div class="muted sm"><%= n.body %></div><% } %>
+        <div class="muted sm"><%= formatDate(n.createdAt, { withTime: true }) %>
+          <% if (n.emailRequested) { %>· <%= t('platformSocial.email') %>: <%= n.emailSentAt ? t('notifications.emailSent') : (n.emailError ? t('notifications.emailFailed') : t('notifications.emailPending')) %><% } %>
+        </div>
+      </div>
+      <div class="notif__actions">
+        <% if (n.link) { %><a class="btn btn--sm" href="<%= n.link %>"><%= t('notifications.open') %></a><% } %>
+        <% if (!n.readAt) { %>
+        <form method="post" action="<%= b %>/notifications/<%= n._id %>/read" class="inline">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button class="btn btn--sm btn--ghost" type="submit"><%= t('notifications.markRead') %></button>
+        </form>
+        <% } %>
+      </div>
+    </li>
+    <% }); %>
+    <% if (!items.length) { %><li class="muted"><%= t('notifications.empty') %></li><% } %>
+  </ul>
+</div>

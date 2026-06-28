@@ -1,0 +1,82 @@
+<% layout('layouts/admin') -%>
+<% const b = `/admin/${tenant.slug}`; const lang = tenantSettings.defaultLanguage; %>
+<div class="page-head"><h1><%= t('nav.marketing') %></h1></div>
+
+<div class="grid grid--2">
+  <div class="card">
+    <h2 class="card__title"><%= t('marketing.generate') %></h2>
+    <form method="post" action="<%= b %>/ai/marketing" class="form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="form--row">
+        <label class="field"><span><%= t('events.startDate') %></span><input type="date" name="from" value="<%= form.from || '' %>"></label>
+        <label class="field"><span><%= t('events.endDate') %></span><input type="date" name="to" value="<%= form.to || '' %>"></label>
+      </div>
+      <label class="field"><span><%= t('events.audiences') %></span>
+        <select name="audience">
+          <option value=""><%= t('events.anyAudience') %></option>
+          <% audiences.forEach(function(a){ %><option value="<%= a._id %>" <%= String(form.audience)===String(a._id)?'selected':'' %>><%= i18n(a.name, lang) %></option><% }); %>
+        </select>
+      </label>
+      <label class="field"><span><%= t('events.categories') %></span>
+        <select name="category">
+          <option value=""><%= t('events.anyCategory') %></option>
+          <% categories.forEach(function(c){ %><option value="<%= c._id %>" <%= String(form.category)===String(c._id)?'selected':'' %>><%= i18n(c.name, lang) %></option><% }); %>
+        </select>
+      </label>
+      <label class="field"><span><%= t('settings.defaultLang') %></span>
+        <select name="language">
+          <% (tenantSettings.supportedLanguages||[]).forEach(function(code){ %>
+            <option value="<%= code %>" <%= form.language===code?'selected':'' %>><%= languageLabel(code) %></option>
+          <% }); %>
+        </select>
+      </label>
+      <label class="field"><span><%= t('marketing.platform') %></span>
+        <select name="platform">
+          <% platforms.forEach(function(p){ %><option value="<%= p %>" <%= form.platform===p?'selected':'' %>><%= tPlatform(p) %></option><% }); %>
+        </select>
+      </label>
+      <label class="field"><span><%= t('marketing.keywords') %></span><input type="text" name="keywords" value="<%= form.keywords || '' %>"></label>
+
+      <div class="card card--nested">
+        <label class="check">
+          <input type="checkbox" name="includeCalendarLink" <%= form.includeCalendarLink === 'on' || form.includeCalendarLink === true ? 'checked' : '' %>>
+          <%= t('marketing.includeCalendarLink') %>
+        </label>
+        <p class="muted sm"><%= t('marketing.includeCalendarLinkHelp') %></p>
+        <label class="field"><span><%= t('marketing.calendarView') %></span>
+          <select name="calendarView">
+            <% ['list','cards','agenda','month'].forEach(function(v){ %>
+              <option value="<%= v %>" <%= (form.calendarView || 'list')===v?'selected':'' %>><%= tView(v) %></option>
+            <% }); %>
+          </select>
+        </label>
+      </div>
+
+      <button class="btn btn--primary" type="submit"><%= t('marketing.generateBtn') %></button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2 class="card__title"><%= t('marketing.result') %></h2>
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="flash flash--error"><%= error %></div>
+    <% } %>
+    <% if (typeof matchedCount !== 'undefined') { %>
+      <p class="muted"><%= matchedCount %> <%= t('marketing.matchedEvents') %></p>
+    <% } %>
+    <% if (typeof calendarLink !== 'undefined' && calendarLink) { %>
+      <div class="link-box">
+        <label class="field"><span><%= t('marketing.calendarLink') %></span>
+          <input type="text" id="calendarLinkField" readonly value="<%= calendarLink %>">
+        </label>
+        <button class="btn btn--ghost btn--sm" type="button" onclick="navigator.clipboard.writeText(document.getElementById('calendarLinkField').value)"><%= t('marketing.copyLink') %></button>
+      </div>
+    <% } %>
+    <% if (result) { %>
+      <textarea class="result-area" id="resultArea" rows="16" readonly><%= result %></textarea>
+      <button class="btn btn--secondary btn--sm" type="button" onclick="navigator.clipboard.writeText(document.getElementById('resultArea').value)"><%= t('marketing.copyMessage') %></button>
+    <% } else { %>
+      <p class="muted"><%= t('marketing.resultPlaceholder') %></p>
+    <% } %>
+  </div>
+</div>

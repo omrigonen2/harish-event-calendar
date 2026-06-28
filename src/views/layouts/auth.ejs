@@ -1,0 +1,32 @@
+<!doctype html>
+
+<html lang="<%= typeof adminLang !== 'undefined' ? adminLang : 'he' %>" dir="<%= typeof adminDir !== 'undefined' ? adminDir : 'rtl' %>">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title><%= title %> · <%= typeof t === 'function' ? t('app.title') : 'City Events Calendar' %></title>
+
+  <link rel="stylesheet" href="/css/app.css">
+
+</head>
+
+<body class="auth">
+
+  <div class="auth__card">
+
+    <div class="auth__brand"><%= typeof t === 'function' ? t('app.title') : 'City Events Calendar' %></div>
+
+    <%- include('../partials/flash') %>
+
+    <%- body %>
+
+  </div>
+
+</body>
+
+</html>
+

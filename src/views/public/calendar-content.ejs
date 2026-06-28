@@ -1,0 +1,45 @@
+<% if (showClearFilters) { %>
+<div class="filter-banner">
+  <p><%= t('public.filteredBanner') %></p>
+  <a class="btn btn--primary btn--sm" href="<%= clearFiltersUrl %>"><%= t('public.viewAllEvents') %></a>
+</div>
+<% } %>
+
+<% if (['month','week','day'].includes(view)) { %>
+  <div id="calendar"
+       data-view="<%= view %>"
+       data-dir="<%= dir %>"
+       data-lang="<%= lang %>"
+       data-events='<%- JSON.stringify(events).replace(/'/g, "&#39;") %>'></div>
+<% } else { %>
+  <div class="event-<%= view %>">
+    <% if (!events.length) { %><p class="muted"><%= t('public.noEvents') %></p><% } %>
+    <% events.forEach(function(ev){ %>
+      <% if (view === 'cards') { %>
+        <a class="ev-card" href="<%= ev.url %>">
+          <% if (ev.coverMediaId) { %><div class="ev-card__img"><img src="<%= base %>/media/<%= ev.coverMediaId %>/raw" alt="" loading="lazy"></div><% } %>
+          <div class="ev-card__body">
+            <div class="ev-card__date"><%= formatDate(ev.start, { withTime: true }) %></div>
+            <%- include('partials/event-characters', { characters: ev.characters }) %>
+            <h3 class="ev-card__title"><%= ev.title %></h3>
+            <p class="ev-card__excerpt"><%= ev.excerpt %></p>
+            <div class="ev-card__price"><%= ev.isFree ? t('events.free') : (ev.price + ' ' + ev.currency) %></div>
+          </div>
+        </a>
+      <% } else { %>
+        <a class="ev-row" href="<%= ev.url %>">
+          <div class="ev-row__date">
+            <div class="ev-row__day"><%= new Date(ev.start).getDate() %></div>
+            <div class="ev-row__mon"><%= new Date(ev.start).toLocaleString(lang === 'he' ? 'he-IL' : 'en', { month: 'short' }) %></div>
+          </div>
+          <div class="ev-row__body">
+            <h3 class="ev-row__title"><%= ev.title %></h3>
+            <%- include('partials/event-characters', { characters: ev.characters }) %>
+            <div class="muted sm"><%= formatDate(ev.start, { withTime: true }) %> · <%= ev.isFree ? t('events.free') : (ev.price + ' ' + ev.currency) %></div>
+            <% if (view === 'agenda') { %><p class="ev-row__excerpt"><%= ev.excerpt %></p><% } %>
+          </div>
+        </a>
+      <% } %>
+    <% }); %>
+  </div>
+<% } %>

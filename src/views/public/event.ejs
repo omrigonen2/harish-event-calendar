@@ -1,0 +1,47 @@
+<% layout('layouts/public') -%>
+<article class="event-detail">
+  <a class="event-detail__back" href="<%= calendarBackUrl %>">← <%= t('public.backToCalendar') %></a>
+
+  <% if (coverUrl) { %>
+    <div class="event-detail__cover"><img src="<%= coverUrl %>" alt="<%= eventTitle %>"></div>
+  <% } %>
+
+  <h1 class="event-detail__title"><%= eventTitle %></h1>
+  <% if (typeof usedFallback !== 'undefined' && usedFallback) { %>
+    <p class="muted sm"><%= t('public.translationFallback', { lang: languageLabel(lang) }) %></p>
+  <% } %>
+
+  <div class="event-detail__meta">
+    <span>🗓️ <%= formatDate(event.startAt, { withTime: true }) %><% if (event.endAt) { %> – <%= formatDate(event.endAt, { withTime: true }) %><% } %></span>
+    <span><%= event.pricing.isFree ? '🎟️ ' + t('events.free') : ('💰 ' + event.pricing.price + ' ' + event.pricing.currency) %></span>
+    <% if (event.eventCharacterIds && event.eventCharacterIds.length) { %>
+      <span class="event-detail__character">
+        <span class="event-detail__character-label"><%= t('public.eventCharacter') %>:</span>
+        <% event.eventCharacterIds.forEach(function(c){ %>
+          <span class="chip chip--character"><%= i18n(c.name, lang) %></span>
+        <% }); %>
+      </span>
+    <% } %>
+  </div>
+
+  <% if (event.categoryIds && event.categoryIds.length) { %>
+  <div class="chips">
+    <% event.categoryIds.forEach(function(c){ %>
+      <span class="chip" style="border-color: <%= c.color %>"><%= i18n(c.name, lang) %></span>
+    <% }); %>
+  </div>
+  <% } %>
+
+  <div class="event-detail__content rich">
+    <% if (content.descriptionHtml) { %>
+      <%- content.descriptionHtml %>
+    <% } else { %>
+      <p class="muted"><%= t('public.noDescription') %></p>
+    <% } %>
+  </div>
+
+  <div class="event-detail__actions">
+    <a class="btn btn--primary" href="<%= icsUrl %>"><%= t('public.addToCalendar') %></a>
+    <button class="btn btn--ghost" type="button" onclick="navigator.share ? navigator.share({title: document.title, url: location.href}) : navigator.clipboard.writeText(location.href)"><%= t('public.share') %></button>
+  </div>
+</article>

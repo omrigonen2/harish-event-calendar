@@ -1,0 +1,17 @@
+<div class="card">
+  <table class="table">
+    <thead><tr><th><%= t('audit.when') %></th><th><%= t('audit.actor') %></th><th><%= t('audit.action') %></th><th><%= t('table.entity') %></th><th><%= t('table.details') %></th></tr></thead>
+    <tbody>
+      <% items.forEach(function(it){ %>
+      <tr>
+        <td class="muted nowrap"><%= formatDate(it.createdAt, { withTime: true }) %></td>
+        <td><%= it.actorEmail || '—' %></td>
+        <td><code><%= it.action %></code></td>
+        <td class="muted"><%= it.entityType %></td>
+        <td class="muted sm"><%= it.metadata ? JSON.stringify(it.metadata) : '' %></td>
+      </tr>
+      <% }); %>
+      <% if (!items.length) { %><tr><td colspan="5" class="muted"><%= t('audit.noActivity') %></td></tr><% } %>
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,25 @@
+<% layout('layouts/admin') -%>
+<%
+  const b = `/admin/${tenant.slug}`;
+  const supported = tenantSettings.supportedLanguages || [];
+  const def = tenantSettings.defaultLanguage;
+  const others = supported.filter((c) => c !== def);
+%>
+<div class="page-head">
+  <h1><%= t('eventCharacters.title') %></h1>
+  <span class="muted sm"><%= t('taxonomy.dragHint') %></span>
+</div>
+
+<%- include('../partials/taxonomy-manager', {
+  items: eventCharacters,
+  kind: 'eventCharacter',
+  b,
+  supported,
+  def,
+  others,
+  hasColor: false,
+  addTitle: t('eventCharacters.add'),
+  allTitle: t('eventCharacters.all'),
+  noYet: t('eventCharacters.noYet'),
+  deleteConfirm: t('eventCharacters.deleteConfirm'),
+}) %>

@@ -1,0 +1,7 @@
+<% if (characters && characters.length) { %>
+  <div class="ev-characters" aria-label="<%= t('public.eventCharacter') %>">
+    <% characters.forEach(function(label){ %>
+      <span class="chip chip--character"><%= label %></span>
+    <% }); %>
+  </div>
+<% } %>

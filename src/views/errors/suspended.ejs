@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="<%= typeof adminLang !== 'undefined' ? adminLang : 'he' %>" dir="<%= typeof adminDir !== 'undefined' ? adminDir : 'rtl' %>"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title><%= typeof t === 'function' ? t('errors.suspended') : 'Suspended' %></title><link rel="stylesheet" href="/css/app.css"></head>
+<body class="error-page">
+  <div class="error-box">
+    <h1><%= typeof t === 'function' ? t('errors.suspendedTitle') : 'Account suspended' %></h1>
+    <p><%= typeof t === 'function' ? t('errors.suspendedBody') : 'This calendar is currently suspended. Please contact the platform administrator.' %></p>
+  </div>
+</body></html>

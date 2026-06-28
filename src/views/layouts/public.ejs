@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="<%= typeof lang !== 'undefined' ? lang : 'en' %>" dir="<%= typeof dir !== 'undefined' ? dir : 'ltr' %>">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %></title>
+  <% const seo = (typeof tenantSettings !== 'undefined' && tenantSettings.seo) ? tenantSettings.seo : {}; %>
+  <meta name="description" content="<%= seo.description || (typeof tenant !== 'undefined' ? tenant.name : '') %>">
+  <link rel="stylesheet" href="/css/app.css">
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+  <% if (typeof tenantSettings !== 'undefined' && tenantSettings) { %>
+  <style>
+    :root {
+      --brand-primary: <%= tenantSettings.colors.primary %>;
+      --brand-secondary: <%= tenantSettings.colors.secondary %>;
+    }
+  </style>
+  <% } %>
+</head>
+<body class="public">
+  <header class="public-header">
+    <div class="public-header__inner">
+      <a class="public-header__brand" href="/c/<%= tenant.slug %>"><%= tenant.name %></a>
+      <nav class="public-header__lang">
+        <% (tenantSettings.supportedLanguages || []).forEach(function(code){ %>
+          <a class="<%= (typeof lang !== 'undefined' && lang === code) ? 'is-active' : '' %>"
+             href="?<%= new URLSearchParams(Object.assign({}, query, { lang: code })).toString() %>"><%= languageLabel(code) %></a>
+        <% }); %>
+      </nav>
+    </div>
+  </header>
+  <main class="public-main">
+    <%- body %>
+  </main>
+  <footer class="public-footer">
+    <p><%= t('public.poweredBy') %></p>
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+  <script src="/js/public.js" defer></script>
+</body>
+</html>

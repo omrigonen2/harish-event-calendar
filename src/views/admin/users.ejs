@@ -1,0 +1,92 @@
+<% layout('layouts/admin') -%>
+<% const b = `/admin/${tenant.slug}`;
+   function membership(u){ return (u.tenantMemberships||[]).find(m => String(m.tenantId) === String(tenantId)); }
+   const PERMS = ['eventsWrite','eventsPublish','eventsScopeAll','aiMarketing','tenantManage'];
+   function permsOf(m){
+     if (m.permissions) return m.permissions;
+     const mgr = m.role === 'manager';
+     return { eventsWrite: !mgr ? true : true, eventsPublish: mgr, eventsScopeAll: mgr, aiMarketing: mgr, tenantManage: mgr };
+   } %>
+
+<div class="page-head"><h1><%= t('users.title') %></h1></div>
+
+<div class="card">
+  <h2 class="card__title"><%= t('users.invite') %></h2>
+  <form method="post" action="<%= b %>/users/invite" class="form perm-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <div class="form--row">
+      <label class="field"><span><%= t('users.email') %></span><input type="email" name="email" required></label>
+      <label class="field"><span><%= t('users.name') %></span><input type="text" name="name"></label>
+    </div>
+    <div class="field"><span><%= t('users.permissions') %></span>
+      <div class="checks perm-group">
+        <% PERMS.forEach(function(p){ %>
+          <label class="check perm-check perm-check--<%= p %>">
+            <input type="checkbox" name="<%= p %>" <%= p==='eventsWrite' ? 'checked' : '' %> data-perm="<%= p %>">
+            <%= t('users.perm.' + p) %>
+          </label>
+        <% }); %>
+      </div>
+      <p class="muted sm"><%= t('users.perm.managerHint') %></p>
+    </div>
+    <button class="btn btn--primary" type="submit"><%= t('users.inviteBtn') %></button>
+  </form>
+</div>
+
+<div class="card">
+  <table class="table">
+    <thead><tr><th><%= t('table.email') %></th><th><%= t('table.name') %></th><th><%= t('users.permissions') %></th><th><%= t('table.status') %></th><th><%= t('table.actions') %></th></tr></thead>
+    <tbody>
+      <% users.forEach(function(u){ const m = membership(u); if(!m) return; const perms = permsOf(m); %>
+      <tr>
+        <td><%= u.email %><% if (!u.passwordHash) { %> <span class="pill pill--amber"><%= t('users.pending') %></span><% } %></td>
+        <td class="muted"><%= u.name || '—' %></td>
+        <td>
+          <form method="post" action="<%= b %>/users/<%= u._id %>/role" class="perm-form">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="checks perm-group">
+              <% PERMS.forEach(function(p){ %>
+                <label class="check perm-check perm-check--<%= p %>">
+                  <input type="checkbox" name="<%= p %>" <%= perms[p] ? 'checked' : '' %> data-perm="<%= p %>">
+                  <%= t('users.perm.' + p) %>
+                </label>
+              <% }); %>
+            </div>
+            <button class="btn btn--sm btn--primary" type="submit"><%= t('common.save') %></button>
+          </form>
+        </td>
+        <td>
+          <span class="pill pill--<%= m.active ? 'green':'gray' %>"><%= m.active ? tStatus('active') : t('users.inactive') %></span>
+        </td>
+        <td class="row-actions nowrap">
+          <form method="post" action="<%= b %>/users/<%= u._id %>/active" class="inline">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <input type="hidden" name="active" value="<%= m.active ? 'false':'true' %>">
+            <button class="btn btn--sm btn--ghost" type="submit"><%= m.active ? t('users.deactivate') : t('users.activate') %></button>
+          </form>
+          <form method="post" action="<%= b %>/users/<%= u._id %>/reset" class="inline">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="btn btn--sm btn--ghost" type="submit"><%= t('users.resetPassword') %></button>
+          </form>
+        </td>
+      </tr>
+      <% }); %>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  // Checking "Manager" implies (and locks) every other permission.
+  document.querySelectorAll('.perm-form').forEach(function(form){
+    var manager = form.querySelector('input[data-perm="tenantManage"]');
+    var others = Array.prototype.slice.call(form.querySelectorAll('input[data-perm]'))
+      .filter(function(el){ return el !== manager; });
+    function sync(){
+      others.forEach(function(el){
+        if (manager.checked) { el.checked = true; el.disabled = true; }
+        else { el.disabled = false; }
+      });
+    }
+    if (manager) { manager.addEventListener('change', sync); sync(); }
+  });
+</script>

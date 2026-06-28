@@ -1,0 +1,87 @@
+<% layout('layouts/admin') -%>
+<% activeNav = 'platform-settings'; %>
+<div class="page-head">
+  <h1><%= t('platform.integrations') %></h1>
+  <p class="muted"><%= t('platform.integrationsHelp') %></p>
+  <p class="muted sm"><%= t('platform.secretsHelp') %></p>
+</div>
+
+<div class="grid grid--2">
+  <div class="card">
+    <h2 class="card__title"><%= t('platform.storage') %>
+      <span class="pill pill--<%= platformSettings.s3.hasAccessKeyId ? 'green' : 'gray' %>"><%= platformSettings.s3.hasAccessKeyId ? t('platform.configured') : t('platform.notSet') %></span>
+    </h2>
+    <form method="post" action="/platform/settings/s3" class="form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label class="field"><span><%= t('platform.endpoint') %></span>
+        <input type="url" name="endpoint" value="<%= platformSettings.s3.endpoint %>" placeholder="https://xxx.idrivee2.com"></label>
+      <label class="field"><span><%= t('platform.region') %></span>
+        <input type="text" name="region" value="<%= platformSettings.s3.region %>"></label>
+      <label class="field"><span><%= t('platform.bucket') %></span>
+        <input type="text" name="bucket" value="<%= platformSettings.s3.bucket %>"></label>
+      <label class="field"><span>Access Key ID <%= platformSettings.s3.hasAccessKeyId ? t('platform.secretSet') : '' %></span>
+        <input type="password" name="accessKeyId" placeholder="<%= platformSettings.s3.hasAccessKeyId ? '••••••••' : '' %>" autocomplete="off"></label>
+      <label class="field"><span>Secret Access Key <%= platformSettings.s3.hasSecretAccessKey ? t('platform.secretSet') : '' %></span>
+        <input type="password" name="secretAccessKey" placeholder="<%= platformSettings.s3.hasSecretAccessKey ? '••••••••' : '' %>" autocomplete="off"></label>
+      <div class="form__actions">
+        <button class="btn btn--primary" type="submit"><%= t('common.save') %></button>
+      </div>
+    </form>
+    <form method="post" action="/platform/settings/test/s3" class="inline">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button class="btn btn--ghost btn--sm" type="submit"><%= t('platform.testUpload') %></button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2 class="card__title"><%= t('platform.openai') %>
+      <span class="pill pill--<%= platformSettings.openai.hasApiKey ? 'green' : 'gray' %>"><%= platformSettings.openai.hasApiKey ? t('platform.configured') : t('platform.notSet') %></span>
+    </h2>
+    <form method="post" action="/platform/settings/openai" class="form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label class="field"><span><%= t('platform.apiKey') %> <%= platformSettings.openai.hasApiKey ? t('platform.secretSet') : '' %></span>
+        <input type="password" name="apiKey" placeholder="<%= platformSettings.openai.hasApiKey ? '••••••••' : 'sk-...' %>" autocomplete="off"></label>
+      <label class="field"><span><%= t('platform.defaultModel') %></span>
+        <% if (modelError) { %>
+          <input type="text" name="defaultModel" value="<%= platformSettings.openai.defaultModel %>">
+          <small class="muted"><%= t('platform.modelLoadError') %>: <%= modelError %></small>
+        <% } else { %>
+          <select name="defaultModel">
+            <% (models || []).forEach(function(m){ %><option value="<%= m %>" <%= platformSettings.openai.defaultModel===m?'selected':'' %>><%= m %></option><% }); %>
+            <% if (!(models||[]).includes(platformSettings.openai.defaultModel)) { %><option value="<%= platformSettings.openai.defaultModel %>" selected><%= platformSettings.openai.defaultModel %></option><% } %>
+          </select>
+        <% } %>
+      </label>
+      <div class="form__actions">
+        <button class="btn btn--primary" type="submit"><%= t('common.save') %></button>
+      </div>
+    </form>
+    <form method="post" action="/platform/settings/test/openai" class="inline">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button class="btn btn--ghost btn--sm" type="submit"><%= t('platform.testOpenai') %></button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2 class="card__title"><%= t('platform.resend') %>
+      <span class="pill pill--<%= platformSettings.resend.hasApiKey ? 'green' : 'gray' %>"><%= platformSettings.resend.hasApiKey ? t('platform.configured') : t('platform.notSet') %></span>
+    </h2>
+    <form method="post" action="/platform/settings/resend" class="form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label class="field"><span><%= t('platform.apiKey') %> <%= platformSettings.resend.hasApiKey ? t('platform.secretSet') : '' %></span>
+        <input type="password" name="apiKey" placeholder="<%= platformSettings.resend.hasApiKey ? '••••••••' : 're_...' %>" autocomplete="off"></label>
+      <label class="field"><span><%= t('platform.fromEmail') %></span>
+        <input type="email" name="fromEmail" value="<%= platformSettings.resend.fromEmail %>" placeholder="events@yourdomain.com"></label>
+      <label class="field"><span><%= t('platform.fromName') %></span>
+        <input type="text" name="fromName" value="<%= platformSettings.resend.fromName %>" placeholder="<%= t('app.title') %>"></label>
+      <div class="form__actions">
+        <button class="btn btn--primary" type="submit"><%= t('common.save') %></button>
+      </div>
+    </form>
+    <form method="post" action="/platform/settings/test/resend" class="inline">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button class="btn btn--ghost btn--sm" type="submit"><%= t('platform.testEmail') %></button>
+    </form>
+    <p class="muted sm"><%= t('platform.resendVerifyNote') %></p>
+  </div>
+</div>

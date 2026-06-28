@@ -1,0 +1,73 @@
+<% layout('layouts/admin') -%>
+<% activeNav = 'tenants';
+   function membership(u){ return (u.tenantMemberships||[]).find(m => String(m.tenantId) === String(tenantId)); }
+   const PERMS = ['eventsWrite','eventsPublish','eventsScopeAll','aiMarketing','tenantManage'];
+   function permsOf(m){
+     if (m.permissions) return m.permissions;
+     const mgr = m.role === 'manager';
+     return { eventsWrite: true, eventsPublish: mgr, eventsScopeAll: mgr, aiMarketing: mgr, tenantManage: mgr };
+   } %>
+
+<div class="page-head">
+  <h1><%= t('platform.tenantUsersTitle', { name: tenant.name }) %></h1>
+  <p class="muted"><a href="/platform/tenants"><%= t('platform.backToTenants') %></a></p>
+</div>
+
+<div class="card">
+  <h2 class="card__title"><%= t('platform.addUser') %></h2>
+  <p class="muted sm"><%= t('platform.addUserHint') %></p>
+  <form method="post" action="/platform/tenants/<%= tenant._id %>/users" class="form perm-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <div class="form--row">
+      <label class="field"><span><%= t('users.email') %></span><input type="email" name="email" required></label>
+      <label class="field"><span><%= t('users.name') %></span><input type="text" name="name"></label>
+      <label class="field"><span><%= t('platform.password') %></span><input type="text" name="password" required></label>
+    </div>
+    <div class="field"><span><%= t('users.permissions') %></span>
+      <div class="checks perm-group">
+        <% PERMS.forEach(function(p){ %>
+          <label class="check perm-check perm-check--<%= p %>">
+            <input type="checkbox" name="<%= p %>" <%= p==='eventsWrite' ? 'checked' : '' %> data-perm="<%= p %>">
+            <%= t('users.perm.' + p) %>
+          </label>
+        <% }); %>
+      </div>
+      <p class="muted sm"><%= t('users.perm.managerHint') %></p>
+    </div>
+    <button class="btn btn--primary" type="submit"><%= t('platform.addUserBtn') %></button>
+  </form>
+</div>
+
+<div class="card">
+  <table class="table">
+    <thead><tr><th><%= t('table.email') %></th><th><%= t('table.name') %></th><th><%= t('users.permissions') %></th><th><%= t('table.status') %></th></tr></thead>
+    <tbody>
+      <% users.forEach(function(u){ const m = membership(u); if(!m) return; const perms = permsOf(m); %>
+      <tr>
+        <td><%= u.email %><% if (!u.passwordHash) { %> <span class="pill pill--amber"><%= t('users.pending') %></span><% } %></td>
+        <td class="muted"><%= u.name || '—' %></td>
+        <td>
+          <% PERMS.forEach(function(p){ if (perms[p]) { %><span class="lang-chip"><%= t('users.perm.' + p) %></span> <% } }); %>
+        </td>
+        <td><span class="pill pill--<%= m.active ? 'green':'gray' %>"><%= m.active ? tStatus('active') : t('users.inactive') %></span></td>
+      </tr>
+      <% }); %>
+      <% if (!users.length) { %><tr><td colspan="4" class="muted"><%= t('platform.noUsers') %></td></tr><% } %>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  document.querySelectorAll('.perm-form').forEach(function(form){
+    var manager = form.querySelector('input[data-perm="tenantManage"]');
+    var others = Array.prototype.slice.call(form.querySelectorAll('input[data-perm]'))
+      .filter(function(el){ return el !== manager; });
+    function sync(){
+      others.forEach(function(el){
+        if (manager.checked) { el.checked = true; el.disabled = true; }
+        else { el.disabled = false; }
+      });
+    }
+    if (manager) { manager.addEventListener('change', sync); sync(); }
+  });
+</script>

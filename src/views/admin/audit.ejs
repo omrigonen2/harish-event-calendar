@@ -1,0 +1,3 @@
+<% layout('layouts/admin') -%>
+<div class="page-head"><h1><%= t('audit.title') %></h1><p class="muted"><%= t('audit.entries', { count: total }) %></p></div>
+<%- include('../partials/audit-table', { items }) %>

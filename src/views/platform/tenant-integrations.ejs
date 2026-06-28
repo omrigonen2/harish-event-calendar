@@ -1,0 +1,114 @@
+<% layout('layouts/admin') -%>
+<% activeNav = 'tenants'; const ti = tenantIntegrations; const ps = platformSettings; %>
+<div class="page-head">
+  <h1><%= t('platform.tenantIntegrationsTitle', { name: tenant.name }) %></h1>
+  <p class="muted">
+    <%= t('platform.integrationsIntro') %>
+    <a href="/platform/settings"><%= t('platform.editDefaults') %></a> ·
+    <a href="/platform/tenants"><%= t('platform.backToTenants') %></a>
+  </p>
+</div>
+
+<div class="grid grid--2">
+  <div class="card">
+    <h2 class="card__title"><%= t('platform.storage') %>
+      <span class="pill pill--<%= ti.s3.override ? 'amber' : 'gray' %>"><%= ti.s3.override ? t('platform.overrideActive') : t('platform.platformDefault') %></span>
+    </h2>
+    <% if (!ps.s3.hasAccessKeyId) { %>
+      <p class="muted sm"><%= t('platform.notConfiguredS3') %> <a href="/platform/settings"><%= t('platform.integrations') %></a></p>
+    <% } %>
+    <form method="post" action="/platform/tenants/<%= tenant._id %>/integrations/s3" class="form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label class="check"><input type="checkbox" name="override" <%= ti.s3.override ? 'checked' : '' %>> <%= t('platform.useTenantS3') %></label>
+      <label class="field"><span><%= t('platform.endpoint') %></span>
+        <input type="url" name="endpoint" value="<%= ti.s3.endpoint %>" placeholder="<%= ps.s3.endpoint || 'https://xxx.idrivee2.com' %>"></label>
+      <label class="field"><span><%= t('platform.region') %></span>
+        <input type="text" name="region" value="<%= ti.s3.region %>" placeholder="<%= ps.s3.region %>"></label>
+      <label class="field"><span><%= t('platform.bucket') %></span>
+        <input type="text" name="bucket" value="<%= ti.s3.bucket %>" placeholder="<%= ps.s3.bucket %>"></label>
+      <label class="field"><span>Access Key ID <%= ti.s3.hasAccessKeyId ? t('platform.overrideSet') : '' %></span>
+        <input type="password" name="accessKeyId" placeholder="<%= ti.s3.hasAccessKeyId ? '••••••••' : t('platform.leaveBlankKeep') %>" autocomplete="off"></label>
+      <label class="field"><span>Secret Access Key <%= ti.s3.hasSecretAccessKey ? t('platform.overrideSet') : '' %></span>
+        <input type="password" name="secretAccessKey" placeholder="<%= ti.s3.hasSecretAccessKey ? '••••••••' : t('platform.leaveBlankKeep') %>" autocomplete="off"></label>
+      <div class="form__actions">
+        <button class="btn btn--primary" type="submit"><%= t('common.save') %></button>
+      </div>
+    </form>
+    <div class="form__actions">
+      <form method="post" action="/platform/tenants/<%= tenant._id %>/integrations/test/s3" class="inline">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button class="btn btn--ghost btn--sm" type="submit"><%= t('platform.testUpload') %></button>
+      </form>
+      <% if (ti.s3.override) { %>
+      <form method="post" action="/platform/tenants/<%= tenant._id %>/integrations/s3/clear" class="inline" onsubmit="return confirm('<%= t('platform.clearS3Confirm') %>')">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button class="btn btn--ghost btn--sm" type="submit"><%= t('platform.clearOverride') %></button>
+      </form>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="card__title"><%= t('platform.openai') %>
+      <span class="pill pill--<%= ti.openai.override ? 'amber' : 'gray' %>"><%= ti.openai.override ? t('platform.overrideActive') : t('platform.platformDefault') %></span>
+    </h2>
+    <% if (!ps.openai.hasApiKey) { %>
+      <p class="muted sm"><%= t('platform.notConfiguredOpenai') %> <a href="/platform/settings"><%= t('platform.integrations') %></a></p>
+    <% } %>
+    <form method="post" action="/platform/tenants/<%= tenant._id %>/integrations/openai" class="form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label class="check"><input type="checkbox" name="override" <%= ti.openai.override ? 'checked' : '' %>> <%= t('platform.useTenantOpenai') %></label>
+      <label class="field"><span><%= t('platform.apiKey') %> <%= ti.openai.hasApiKey ? t('platform.overrideSet') : '' %></span>
+        <input type="password" name="apiKey" placeholder="<%= ti.openai.hasApiKey ? '••••••••' : 'sk-...' %>" autocomplete="off"></label>
+      <div class="form__actions">
+        <button class="btn btn--primary" type="submit"><%= t('common.save') %></button>
+      </div>
+    </form>
+    <div class="form__actions">
+      <form method="post" action="/platform/tenants/<%= tenant._id %>/integrations/test/openai" class="inline">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button class="btn btn--ghost btn--sm" type="submit"><%= t('platform.testOpenai') %></button>
+      </form>
+      <% if (ti.openai.override) { %>
+      <form method="post" action="/platform/tenants/<%= tenant._id %>/integrations/openai/clear" class="inline" onsubmit="return confirm('<%= t('platform.clearOpenaiConfirm') %>')">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button class="btn btn--ghost btn--sm" type="submit"><%= t('platform.clearOverride') %></button>
+      </form>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="card__title"><%= t('platform.resend') %>
+      <span class="pill pill--<%= ti.resend.override ? 'amber' : 'gray' %>"><%= ti.resend.override ? t('platform.overrideActive') : t('platform.platformDefault') %></span>
+    </h2>
+    <% if (!ps.resend.hasApiKey) { %>
+      <p class="muted sm"><%= t('platform.notConfiguredResend') %> <a href="/platform/settings"><%= t('platform.integrations') %></a></p>
+    <% } %>
+    <form method="post" action="/platform/tenants/<%= tenant._id %>/integrations/resend" class="form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label class="check"><input type="checkbox" name="override" <%= ti.resend.override ? 'checked' : '' %>> <%= t('platform.useTenantResend') %></label>
+      <label class="field"><span><%= t('platform.apiKey') %> <%= ti.resend.hasApiKey ? t('platform.overrideSet') : '' %></span>
+        <input type="password" name="apiKey" placeholder="<%= ti.resend.hasApiKey ? '••••••••' : 're_...' %>" autocomplete="off"></label>
+      <label class="field"><span><%= t('platform.fromEmail') %></span>
+        <input type="email" name="fromEmail" value="<%= ti.resend.fromEmail %>" placeholder="<%= ps.resend.fromEmail || 'events@yourdomain.com' %>"></label>
+      <label class="field"><span><%= t('platform.fromName') %></span>
+        <input type="text" name="fromName" value="<%= ti.resend.fromName %>" placeholder="<%= ps.resend.fromName || tenant.name %>"></label>
+      <div class="form__actions">
+        <button class="btn btn--primary" type="submit"><%= t('common.save') %></button>
+      </div>
+    </form>
+    <div class="form__actions">
+      <form method="post" action="/platform/tenants/<%= tenant._id %>/integrations/test/resend" class="inline">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button class="btn btn--ghost btn--sm" type="submit"><%= t('platform.testEmail') %></button>
+      </form>
+      <% if (ti.resend.override) { %>
+      <form method="post" action="/platform/tenants/<%= tenant._id %>/integrations/resend/clear" class="inline" onsubmit="return confirm('<%= t('platform.clearResendConfirm') %>')">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button class="btn btn--ghost btn--sm" type="submit"><%= t('platform.clearOverride') %></button>
+      </form>
+      <% } %>
+    </div>
+  </div>
+</div>

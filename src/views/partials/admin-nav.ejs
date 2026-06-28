@@ -1,0 +1,72 @@
+<% const active = typeof activeNav !== 'undefined' ? activeNav : ''; %>
+
+<% const perms = (typeof tenantPermissions !== 'undefined' && tenantPermissions) ? tenantPermissions : {}; %>
+
+<% const isManager = perms.tenantManage === true; %>
+
+<% const canWriteEvents = isManager || perms.eventsWrite === true; %>
+
+<% const canMarketing = isManager || perms.aiMarketing === true; %>
+
+<aside class="sidenav">
+
+  <nav class="sidenav__nav">
+
+    <% if (typeof tenant !== 'undefined' && tenant) { %>
+
+      <% const b = `/admin/${tenant.slug}`; %>
+
+      <a class="sidenav__link <%= active==='dashboard'?'is-active':'' %>" href="<%= b %>/dashboard"><span>📊</span> <%= t('nav.dashboard') %></a>
+
+      <a class="sidenav__link <%= active==='events'?'is-active':'' %>" href="<%= b %>/events"><span>📅</span> <%= t('nav.events') %></a>
+
+      <% if (isManager) { %>
+
+      <a class="sidenav__link <%= active==='categories'?'is-active':'' %>" href="<%= b %>/categories"><span>🏷️</span> <%= t('nav.categories') %></a>
+
+      <a class="sidenav__link <%= active==='audiences'?'is-active':'' %>" href="<%= b %>/audiences"><span>👥</span> <%= t('nav.audiences') %></a>
+
+      <a class="sidenav__link <%= active==='eventCharacters'?'is-active':'' %>" href="<%= b %>/event-characters"><span>✡️</span> <%= t('nav.eventCharacters') %></a>
+
+      <% } %>
+
+      <a class="sidenav__link <%= active==='media'?'is-active':'' %>" href="<%= b %>/media"><span>🖼️</span> <%= t('nav.media') %></a>
+
+      <% if (canMarketing) { %>
+
+      <a class="sidenav__link <%= active==='marketing'?'is-active':'' %>" href="<%= b %>/ai/marketing"><span>📣</span> <%= t('nav.marketing') %></a>
+
+      <% } %>
+
+      <% if (isManager) { %>
+
+      <a class="sidenav__link <%= active==='users'?'is-active':'' %>" href="<%= b %>/users"><span>🧑‍💼</span> <%= t('nav.users') %></a>
+
+      <a class="sidenav__link <%= active==='settings'?'is-active':'' %>" href="<%= b %>/settings"><span>⚙️</span> <%= t('nav.settings') %></a>
+
+      <a class="sidenav__link <%= active==='audit'?'is-active':'' %>" href="<%= b %>/audit"><span>📜</span> <%= t('nav.audit') %></a>
+
+      <% } %>
+
+      <a class="sidenav__link <%= active==='notifications'?'is-active':'' %>" href="<%= b %>/notifications"><span>🔔</span> <%= t('nav.notifications') %></a>
+
+    <% } %>
+
+
+
+    <% if (currentUser && currentUser.platformRole) { %>
+
+      <div class="sidenav__section"><%= t('nav.platform') %></div>
+
+      <a class="sidenav__link <%= active==='tenants'?'is-active':'' %>" href="/platform/tenants"><span>🏢</span> <%= t('nav.tenants') %></a>
+
+      <a class="sidenav__link <%= active==='platform-settings'?'is-active':'' %>" href="/platform/settings"><span>🔌</span> <%= t('nav.integrations') %></a>
+
+      <a class="sidenav__link <%= active==='platform-audit'?'is-active':'' %>" href="/platform/audit"><span>📜</span> <%= t('nav.globalAudit') %></a>
+
+    <% } %>
+
+  </nav>
+
+</aside>
+

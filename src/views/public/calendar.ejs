@@ -1,0 +1,41 @@
+<% layout('layouts/public') -%>
+<% const base = `/c/${tenant.slug}`; %>
+
+<div class="public-toolbar">
+  <div class="viewswitch">
+    <% views.forEach(function(v){ %>
+      <a class="viewswitch__btn <%= view===v?'is-active':'' %>"
+         href="?<%= new URLSearchParams(Object.assign({}, query, { view: v })).toString() %>"><%= tView(v) %></a>
+    <% }); %>
+  </div>
+
+  <form class="public-filters" method="get" action="<%= base %>" id="publicFilters">
+    <input type="hidden" name="view" value="<%= view %>">
+    <input type="hidden" name="lang" value="<%= lang %>">
+    <% if (filters.from) { %><input type="hidden" name="from" value="<%= filters.from %>"><% } %>
+    <% if (filters.to) { %><input type="hidden" name="to" value="<%= filters.to %>"><% } %>
+    <% if (query.share) { %><input type="hidden" name="share" value="<%= query.share %>"><% } %>
+    <input type="search" name="q" value="<%= filters.q || '' %>" placeholder="<%= t('public.search') %>" autocomplete="off">
+    <select name="category">
+      <option value=""><%= t('public.allCategories') %></option>
+      <% categories.forEach(function(c){ %><option value="<%= c._id %>" <%= String(filters.category)===String(c._id)?'selected':'' %>><%= i18n(c.name, lang) %></option><% }); %>
+    </select>
+    <select name="audience">
+      <option value=""><%= t('public.allAudiences') %></option>
+      <% audiences.forEach(function(a){ %><option value="<%= a._id %>" <%= String(filters.audience)===String(a._id)?'selected':'' %>><%= i18n(a.name, lang) %></option><% }); %>
+    </select>
+    <select name="character">
+      <option value=""><%= t('public.allEventCharacters') %></option>
+      <% (eventCharacters || []).forEach(function(c){ %><option value="<%= c._id %>" <%= String(filters.character)===String(c._id)?'selected':'' %>><%= i18n(c.name, lang) %></option><% }); %>
+    </select>
+    <select name="price">
+      <option value=""><%= t('events.anyPrice') %></option>
+      <option value="free" <%= filters.price==='free'?'selected':'' %>><%= t('events.free') %></option>
+      <option value="paid" <%= filters.price==='paid'?'selected':'' %>><%= t('events.paid') %></option>
+    </select>
+  </form>
+</div>
+
+<div id="calendarDynamic" class="calendar-dynamic">
+  <%- include('calendar-content', { base, view, dir, lang, events, showClearFilters, clearFiltersUrl }) %>
+</div>
