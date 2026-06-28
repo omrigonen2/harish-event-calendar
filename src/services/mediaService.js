@@ -44,6 +44,33 @@ async function readImageDimensions(buffer) {
   return { width: meta.width || 0, height: meta.height || 0 };
 }
 
+async function sampleEdgeBackground(buffer) {
+  try {
+    const { dominant } = await sharp(buffer).rotate().resize(16, 16, { fit: 'cover' }).stats();
+    return {
+      r: Math.round(dominant.r),
+      g: Math.round(dominant.g),
+      b: Math.round(dominant.b),
+      alpha: 255,
+    };
+  } catch {
+    return { r: 15, g: 15, b: 20, alpha: 255 };
+  }
+}
+
+/** Fit AI output into exact 16:9 without cropping — letterbox with edge-matched background. */
+async function normalizeEventCover(buffer, settings) {
+  const tw = settings.targetWidth;
+  const th = settings.targetHeight;
+  const bg = await sampleEdgeBackground(buffer);
+  const output = await sharp(buffer)
+    .rotate()
+    .resize(tw, th, { fit: 'contain', background: bg })
+    .webp({ quality: 82 })
+    .toBuffer();
+  return { output, width: tw, height: th };
+}
+
 async function storeOptimizedImage(tenant, userId, file, { folder, tags, output, width, height }) {
   const hash = sha256Hex(output);
   const existing = await MediaAsset.findOne({ tenantId: tenant._id, hash });
@@ -118,7 +145,7 @@ async function runAspectEdit(asset, tenant, { comment = '' } = {}) {
     prompt,
     size,
   });
-  return optimize(editedBuffer);
+  return normalizeEventCover(editedBuffer, settings);
 }
 
 export async function generateAspectPreview(tenant, assetId, userScope = null, { comment = '' } = {}) {

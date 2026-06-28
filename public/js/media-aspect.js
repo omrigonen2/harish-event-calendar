@@ -31,6 +31,53 @@
     if (!container?.children.length) container.hidden = true;
   }
 
+  let aiLoaderCount = 0;
+  let aiLoaderEl = null;
+
+  function ensureAiLoader() {
+    if (aiLoaderEl) return aiLoaderEl;
+    aiLoaderEl = document.createElement('div');
+    aiLoaderEl.className = 'ai-aspect-loader';
+    aiLoaderEl.hidden = true;
+    aiLoaderEl.setAttribute('role', 'alertdialog');
+    aiLoaderEl.setAttribute('aria-modal', 'true');
+    aiLoaderEl.setAttribute('aria-busy', 'true');
+    aiLoaderEl.innerHTML = `
+      <div class="ai-aspect-loader__box">
+        <div class="ai-aspect-loader__spinner" aria-hidden="true"></div>
+        <p class="ai-aspect-loader__text"></p>
+      </div>
+    `;
+    document.body.appendChild(aiLoaderEl);
+    return aiLoaderEl;
+  }
+
+  function showAiLoader(message) {
+    const el = ensureAiLoader();
+    el.querySelector('.ai-aspect-loader__text').textContent = message
+      || t('media.fixingAspect', {}, 'Fixing with AI...');
+    aiLoaderCount += 1;
+    el.hidden = false;
+    document.body.classList.add('ai-aspect-loader-open');
+  }
+
+  function hideAiLoader() {
+    aiLoaderCount = Math.max(0, aiLoaderCount - 1);
+    if (aiLoaderCount === 0 && aiLoaderEl) {
+      aiLoaderEl.hidden = true;
+      document.body.classList.remove('ai-aspect-loader-open');
+    }
+  }
+
+  async function withAiLoader(task, message) {
+    showAiLoader(message);
+    try {
+      return await task();
+    } finally {
+      hideAiLoader();
+    }
+  }
+
   function buildImageCard(label, item) {
     const card = document.createElement('div');
     card.className = 'aspect-compare__card';
@@ -138,12 +185,15 @@
     });
 
     remakeBtn.addEventListener('click', async () => {
-      await setBusy(true, t('media.fixingAspect', {}, 'Fixing with AI...'));
+      await setBusy(true);
       try {
-        const next = await postJson(
-          `${options.fixBaseUrl}/${w.mediaId}/fix-aspect/preview`,
-          options.csrf,
-          { previewId, comment: commentInput.value },
+        const next = await withAiLoader(
+          () => postJson(
+            `${options.fixBaseUrl}/${w.mediaId}/fix-aspect/preview`,
+            options.csrf,
+            { previewId, comment: commentInput.value },
+          ),
+          t('media.fixingAspect', {}, 'Fixing with AI...'),
         );
         previewId = next.previewId;
         compare.innerHTML = '';
@@ -152,9 +202,9 @@
           buildImageCard(t('media.editedImage', {}, 'AI edit'), next.preview),
         );
         commentInput.value = '';
-        await setBusy(false);
       } catch (err) {
         alert(err.message);
+      } finally {
         await setBusy(false);
       }
     });
@@ -211,18 +261,19 @@
       if (!options.fixBaseUrl || !w.mediaId) return;
       fixBtn.disabled = true;
       dismissBtn.disabled = true;
-      fixBtn.textContent = t('media.fixingAspect', {}, 'Fixing with AI...');
       try {
-        const data = await postJson(
-          `${options.fixBaseUrl}/${w.mediaId}/fix-aspect/preview`,
-          options.csrf,
+        const data = await withAiLoader(
+          () => postJson(
+            `${options.fixBaseUrl}/${w.mediaId}/fix-aspect/preview`,
+            options.csrf,
+          ),
+          t('media.fixingAspect', {}, 'Fixing with AI...'),
         );
         const comparePanel = buildComparisonPanel(w, data, options);
         panel.replaceWith(comparePanel);
       } catch (err) {
         fixBtn.disabled = false;
         dismissBtn.disabled = false;
-        fixBtn.textContent = t('media.fixWithAi', {}, 'Fix with AI');
         alert(err.message);
       }
     });

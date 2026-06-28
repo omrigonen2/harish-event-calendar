@@ -13,6 +13,7 @@ Rules:
 - ONLY extend the canvas (outpaint) by adding seamless background on the sides or top/bottom until the aspect ratio is 16:9.
 - Match lighting, texture, and color of the original edge pixels so extensions blend naturally.
 - Keep the original composition centered; do not zoom, stretch, or distort.
+- Ensure ALL text and logos remain fully visible — nothing may be cut off at any edge.
 
 Current image: {width}×{height} px ({orientation}, ratio {ratio}).
 Target: 16:9 ({targetWidth}×{targetHeight} px).`;
