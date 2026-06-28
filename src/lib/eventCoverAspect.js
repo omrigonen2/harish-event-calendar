@@ -21,13 +21,17 @@ export function resolveEventCoverSettings(platformMedia = {}) {
   };
 }
 
-/** OpenAI requires width and height divisible by 16. */
+/** OpenAI images.edit sizes supported by gpt-image models. */
+export const OPENAI_IMAGE_SIZE_LANDSCAPE = '1536x1024';
+export const OPENAI_IMAGE_SIZE_PORTRAIT = '1024x1536';
+export const OPENAI_IMAGE_SIZE_SQUARE = '1024x1024';
+
+/** Pick the closest supported OpenAI edit size for the target aspect ratio. */
 export function toOpenAiImageSize(width, height) {
   const ratio = width / height;
-  let w = Math.max(16, Math.round(width / 16) * 16);
-  let h = Math.max(16, Math.round(w / ratio / 16) * 16);
-  if (h < 16) h = 16;
-  return `${w}x${h}`;
+  if (ratio >= 1.15) return OPENAI_IMAGE_SIZE_LANDSCAPE;
+  if (ratio <= 0.87) return OPENAI_IMAGE_SIZE_PORTRAIT;
+  return OPENAI_IMAGE_SIZE_SQUARE;
 }
 
 export function targetRatio(settings) {
